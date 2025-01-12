@@ -1,0 +1,3 @@
+[submodule "dumpsym"]
+	path = dumpsym
+	url = https://github.com/Redbeanw44602/dumpsym.git
