@@ -20,13 +20,13 @@ git checkout -b header
 ```
 
 ### Thunks
- - `virtual function thunk` - Removed.
- - `constructor thunk` - Removed.
- - `vftables` - Removed.
+ - `virtual function thunk` - *Removed.*
+ - `constructor thunk` - *Removed.*
+ - `vftables` - *Removed.*
    - **TODO** dumpsym is currently unable to emit a symbol of vtable pointer.
- - `destructor thunk` - Removed.
+ - `destructor thunk` - *Removed.*
    - **TODO** dumpsym is currently unable to emit a symbol of destructor.
- - `static variables thunk` - Restored.
+ - `static variables thunk` - *Restored.*
    - **TODO** Symbols are now generated correctly, but some symbols cannot be queried from bedrock_runtime_data.
 
 ### Usage
