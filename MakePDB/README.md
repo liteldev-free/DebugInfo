@@ -1,2 +1,1 @@
-# MakePDB
-WIP.
+# cxx-project-template
