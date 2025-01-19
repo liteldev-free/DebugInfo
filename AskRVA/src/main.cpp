@@ -9,8 +9,10 @@
 
 using namespace format;
 
+constexpr auto VERSION = "1.0.0";
+
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
-    argparse::ArgumentParser program("askrva");
+    argparse::ArgumentParser program("askrva", VERSION);
 
     struct {
         OutputFormat m_output_format;
