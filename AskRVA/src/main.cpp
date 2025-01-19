@@ -1,26 +1,37 @@
-#include "pl/SymbolProvider.h"
+#include "format/input/all.h"
+#include "format/output/all.h"
 
-#include <exception>
-#include <fstream>
-#include <print>
-#include <string>
+#include "util/string.h"
 
 #include <argparse/argparse.hpp>
 
-#include <nlohmann/json.hpp>
+#include <pl/SymbolProvider.h>
 
-int main(int argc, char** argv) try {
+using namespace format;
 
+[[nodiscard]] auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("askrva");
+
+    struct {
+        OutputFormat m_output_format;
+        std::string  m_input_path;
+        std::string  m_output_path;
+
+        std::optional<std::string> m_output_failed_path;
+    } args;
+
+    std::string output_format;
 
     // clang-format off
 
     program.add_argument("path")
         .help("Path to the symbol list file.")
+        .store_into(args.m_input_path)
         .required();
     
     program.add_argument("--output", "-o")
         .help("Path to output.")
+        .store_into(args.m_output_path)
         .required();
     
     program.add_argument("--output-failed", "-of")
@@ -28,65 +39,62 @@ int main(int argc, char** argv) try {
 
     program.add_argument("--output-format")
         .help("Specify output format.")
-        .choices("auto", "text", "fakepdb")
-        .default_value("auto");
+        .choices("auto", "text", "fakepdb", "makepdb")
+        .default_value("auto")
+        .store_into(output_format);
 
     // clang-format on
 
     program.parse_args(argc, argv);
 
-    enum OutputFormat { Text, FakePDB } outputFormat;
+    args.m_output_format = [&output_format, &args]() -> OutputFormat {
+        using namespace util::string;
 
-    std::string outputFormat_s = program.get<std::string>("--output-format");
-    std::string inputPath_s    = program.get<std::string>("path");
-    std::string outputPath_s   = program.get<std::string>("--output");
-
-    std::optional<std::string> outputFailedPath_s;
-    if (program.is_used("--output-failed")) {
-        outputFailedPath_s = program.get<std::string>("--output-failed");
-    }
-
-    if (outputFormat_s == "text") {
-        outputFormat = Text;
-    } else if (outputFormat_s == "fakepdb") {
-        outputFormat = FakePDB;
-    } else {
-        if (outputPath_s.ends_with(".json")) {
-            outputFormat = FakePDB;
-        } else {
-            outputFormat = Text;
-        }
-    }
-
-    std::ifstream input(inputPath_s);
-    std::string   symbol;
-
-    std::ofstream output(outputPath_s);
-
-    std::ofstream output_failed;
-    if (outputFailedPath_s) {
-        output_failed.open(*outputFailedPath_s);
-    }
-
-    nlohmann::json json;
-
-    while (std::getline(input, symbol)) {
-        if (symbol.empty()) continue;
-        if (auto rva = reinterpret_cast<uintptr_t>(
-                pl::symbol_provider::pl_resolve_symbol_silent_n(symbol.data(), symbol.size())
-            )) {
-            if (outputFormat == FakePDB) {
-                json[symbol] = std::format("{:#x}", rva);
+        switch (H(output_format)) {
+        case H("text"):
+            return OutputFormat::Text;
+        case H("fakepdb"):
+            return OutputFormat::FakePDB;
+        case H("makepdb"):
+            return OutputFormat::MakePDB;
+        case H("auto"):
+        default: {
+            if (args.m_output_path.ends_with(".json")) {
+                return OutputFormat::MakePDB;
             } else {
-                output << std::format("[{:#x}] {}\n", rva, symbol);
+                return OutputFormat::Text;
             }
-        } else if (output_failed.is_open()) {
-            output_failed << symbol << "\n";
         }
+        }
+    }();
+
+    if (program.is_used("--output-failed")) {
+        args.m_output_failed_path = program.get<std::string>("--output-failed");
     }
 
-    if (outputFormat == FakePDB) {
-        output << json.dump(4);
+    return args;
+}
+
+int main(int argc, char* argv[]) try {
+
+    auto args    = load_args(argc, argv);
+    auto symlist = input::SymbolListFile::load(args.m_input_path);
+
+    auto output_file = output::create(args.m_output_format);
+
+    symlist.for_each([&output_file](const input::Symbol& symbol) {
+        auto& sym = symbol.m_name;
+        auto  rva = pl::symbol_provider::pl_resolve_symbol_silent_n(sym.c_str(), sym.size());
+        if (rva) {
+            output_file->record(symbol.m_name, reinterpret_cast<uint64_t>(rva), symbol.m_type.isFunction());
+        } else {
+            output_file->record_failure(symbol.m_name);
+        }
+    });
+
+    output_file->save(args.m_output_path);
+    if (args.m_output_failed_path) {
+        output_file->save_failure(*args.m_output_failed_path);
     }
 
     std::println("Everything is OK.");
