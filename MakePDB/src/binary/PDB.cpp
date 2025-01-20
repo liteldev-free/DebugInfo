@@ -64,6 +64,27 @@ void PDB::BuildDBI() {
     DbiBuilder.setMachineType(PDB_Machine::Amd64);
     DbiBuilder.setFlags(DbiFlags::FlagStrippedMask);
     DbiBuilder.setBuildNumber(14, 11); // LLVM is compatible with LINK 14.11
+
+    // Add sections.
+    auto SectionTable     = OwningCOFF.SectionTable();
+    auto NumberOfSections = OwningCOFF.NumberOfSections();
+
+    auto SectionDataRef = ArrayRef<uint8_t>(
+        (uint8_t*)SectionTable,
+        OwningCOFF.NumberOfSections() * sizeof(object::coff_section)
+    );
+
+    auto SectionTableRef = ArrayRef<object::coff_section>(
+        (const object::coff_section*)SectionDataRef.data(),
+        NumberOfSections
+    );
+
+    DbiBuilder.createSectionMap(SectionTableRef);
+
+    // Add COFF section header stream.
+    if (DbiBuilder.addDbgStream(DbgHeaderType::SectionHdr, SectionDataRef)) {
+        throw std::runtime_error("Failed to add dbg stream.");
+    }
 }
 
 void PDB::BuildTPI() {

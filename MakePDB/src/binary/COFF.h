@@ -9,7 +9,10 @@ public:
     explicit COFF(std::string_view Path);
 
     codeview::PDB70DebugInfo DebugInfo() const;
-    size_t                   SectionIndex(uint64_t Offset) const;
+
+    size_t                SectionIndex(uint64_t Offset) const;
+    object::coff_section* SectionTable();
+    uint32_t              NumberOfSections() const;
 
     object::COFFObjectFile const& OwningCOFF() const;
 

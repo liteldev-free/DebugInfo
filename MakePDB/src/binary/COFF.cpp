@@ -52,6 +52,16 @@ size_t COFF::SectionIndex(uint64_t Offset) const {
     throw std::runtime_error("Offset is not in any section.");
 }
 
+object::coff_section* COFF::SectionTable() {
+    return reinterpret_cast<object::coff_section*>(
+        OwningCOFF().section_begin()->getRawDataRefImpl().p
+    );
+}
+
+uint32_t COFF::NumberOfSections() const {
+    return OwningCOFF().getNumberOfSections();
+}
+
 object::COFFObjectFile const& COFF::OwningCOFF() const {
     return *OwningBinary.getBinary();
 }
