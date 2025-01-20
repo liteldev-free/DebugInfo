@@ -8,7 +8,7 @@ using namespace makepdb;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
 
-    argparse::ArgumentParser program("MakePDB", "1.0.0");
+    argparse::ArgumentParser program("makepdb", "1.0.0");
 
     struct {
         std::string server_program_path;
