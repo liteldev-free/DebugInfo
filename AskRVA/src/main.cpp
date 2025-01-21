@@ -15,9 +15,9 @@ constexpr auto VERSION = "1.0.0";
     argparse::ArgumentParser program("askrva", VERSION);
 
     struct {
-        OutputFormat m_output_format;
-        std::string  m_input_path;
-        std::string  m_output_path;
+        OutputFormat             m_output_format;
+        std::vector<std::string> m_input_path;
+        std::string              m_output_path;
 
         std::optional<std::string> m_output_failed_path;
     } args;
@@ -29,6 +29,7 @@ constexpr auto VERSION = "1.0.0";
     program.add_argument("path")
         .help("Path to the symbol list file.")
         .store_into(args.m_input_path)
+        .nargs(argparse::nargs_pattern::at_least_one)
         .required();
     
     program.add_argument("--output", "-o")
