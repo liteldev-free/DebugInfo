@@ -78,13 +78,17 @@ def remove_thunks(path_to_file: str):
 
 
 def iterate_headers(target_path: str):
+    def is_header(path: str):
+        return path.endswith('.h') or path.endswith('.hpp')
+
     if not os.path.isdir(target_path):
         print('invalid path.')
         return
 
     for root, dirs, files in os.walk(target_path):
         for file in files:
-            remove_thunks(os.path.join(root, file))
+            if is_header(file):
+                remove_thunks(os.path.join(root, file))
 
 
 def main():
