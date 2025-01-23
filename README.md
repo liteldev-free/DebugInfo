@@ -49,6 +49,8 @@ xmake -v
 ## TODO
  - [ ] Tap into more available symbols.
  - [ ] Fully open source HeaderGen.
+ - [ ] Bootstrap.
+ - [ ] Opti project structure.
 
 ## Be with us
 Our vision is to build an open and inclusive Minecraft: Bedrock Edition ecosystem.
