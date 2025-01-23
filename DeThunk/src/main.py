@@ -1,5 +1,6 @@
 import os
 import argparse
+import re
 
 
 class ProcessorOptions:
@@ -13,6 +14,7 @@ class ProcessorOptions:
     # variables
     remove_virtual_table_pointer_thunk = bool()
     restore_static_variable = bool()
+    restore_member_variable = bool()
 
     def __init__(self, args):
         self.base_dir = args.path
@@ -21,6 +23,7 @@ class ProcessorOptions:
         self.remove_virtual_function_thunk = args.remove_virtual_function_thunk
         self.remove_virtual_table_pointer_thunk = args.remove_virtual_table_pointer_thunk
         self.restore_static_variable = args.restore_static_variable
+        self.restore_member_variable = args.restore_member_variable
 
         if args.all:
             self.set_all(True)
@@ -33,6 +36,7 @@ class ProcessorOptions:
     def set_variable(self, opt: bool):
         self.remove_virtual_table_pointer_thunk = opt
         self.restore_static_variable = opt
+        self.restore_member_variable = opt
 
     def set_all(self, opt: bool):
         self.set_function(opt)
@@ -57,6 +61,15 @@ def remove_thunks(path_to_file: str, args: ProcessorOptions):
         is_modified = False
         in_useless_thunk = False
         in_static_variable = False
+        in_member_variable = False
+
+        ll_typed_regex = re.compile(r'TypedStorage<(\d+), (\d+), (.*?)> (\w+);')
+        ll_untyped_regex = re.compile(r'UntypedStorage<(\d+), (\d+)> (\w+);')
+
+        def regex_preprocess_name(con: str):
+            # typed storage can be very complex, so we need to preprocess it.
+            # TODO: find a better way.
+            return re.sub(r'\s+', ' ', con).replace('< ', '<')
 
         # tmp
         content = ''
@@ -83,7 +96,7 @@ def remove_thunks(path_to_file: str, args: ProcessorOptions):
                     # remove reference
                     refsym_pos = tmpline.rfind('&')  # T&
                     tlpsym_pos = tmpline.rfind('>')  # ::std::add_lvalue_reference_t<T>
-                    assert refsym_pos != -1 or tlpsym_pos != -1
+                    assert refsym_pos != -1 or tlpsym_pos != -1, f'in {path_to_file}'
                     if tlpsym_pos == -1 or refsym_pos > tlpsym_pos:
                         tmpline = tmpline[:refsym_pos] + tmpline[refsym_pos + 1 :]
                     elif refsym_pos == -1 or tlpsym_pos > refsym_pos:
@@ -96,6 +109,54 @@ def remove_thunks(path_to_file: str, args: ProcessorOptions):
 
                     content += f'\t{tmpline}\n'
                     continue
+
+            if args.restore_member_variable and '::ll::' in line:  # union { ... };
+                in_member_variable = True
+                is_modified = True
+            if in_member_variable:
+                # ::ll::TypedStorage<Alignment, Size, T> mVar;
+                # ::ll::UntypedStorage<Alignment, Size>  mVar;
+
+                tmpline = line.strip()
+                if tmpline.endswith(';'):
+                    if not tmpline.startswith('::ll::'):
+                        begin_pos = content.rfind('::ll::')
+                        tmpline = content[begin_pos:] + tmpline
+                        content = content[:begin_pos]
+                        tmpline = tmpline.strip()
+
+                    if 'TypedStorage' in tmpline:
+                        match = ll_typed_regex.search(regex_preprocess_name(tmpline))
+                        assert match and match.lastindex == 4, (
+                            f'in {path_to_file}, line="{tmpline}"'
+                        )
+
+                        align = match[1]  # unused.
+                        size = match[2]  # unused.
+                        type_name = match[3]
+                        var_name = match[4]
+
+                        content += f'\t{type_name} {var_name};\n'
+
+                        in_member_variable = False
+                        continue
+
+                    if 'UntypedStorage' in tmpline:
+                        match = ll_untyped_regex.search(regex_preprocess_name(tmpline))
+                        assert match and match.lastindex == 3, (
+                            f'in {path_to_file}, line="{tmpline}"'
+                        )
+
+                        align = match[1]
+                        size = match[2]
+                        var_name = match[3]
+
+                        content += f'\talignas({align}) std::byte {var_name}[{size}];\n'
+
+                        in_member_variable = False
+                        continue
+
+                    assert False, 'unreachable'
 
             # remove useless thunks.
             if '// NOLINTEND' in line and (in_useless_thunk or in_static_variable):
@@ -139,6 +200,7 @@ def main():
     parser.add_argument('--remove-virtual-table-pointer-thunk', action='store_true')
     parser.add_argument('--remove-virtual-function-thunk', action='store_true')
     parser.add_argument('--restore-static-variable', action='store_true')
+    parser.add_argument('--restore-member-variable', action='store_true')
 
     parser.add_argument('--all', action='store_true', help='Apply all remove/restore options.')
 
