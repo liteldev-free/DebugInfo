@@ -42,10 +42,13 @@ def find_class_definition(line: str) -> str | None:
 
     end_pos = len(line)
     colon_pos = line.find(':')
+    l_angle_bracket_pos = line.find('<')
     if left_brace_pos != -1:
         end_pos = min(end_pos, left_brace_pos)
     if colon_pos != -1:
         end_pos = min(end_pos, colon_pos)
+        if l_angle_bracket_pos != -1 and l_angle_bracket_pos < colon_pos:
+            return None  # template specialization (is not currently supported)
 
     return line[class_pos + specifier_size : end_pos].strip()
 
