@@ -1,7 +1,6 @@
 import os
 import re
 
-import header_preprocessor as HeaderPreProcessor
 import header_postprocessor as HeaderPostProcessor
 
 import util.cpp_language as CppUtil
@@ -264,8 +263,6 @@ def iterate(args: Options):
         for file in files:
             if CppUtil.is_header_file(file):
                 path = os.path.join(root, file)
-                # preprocessing: execution time is before each file.
-                HeaderPreProcessor.process(path)
                 # processing: executed immediately after preprocessing is completed.
                 process(path, args)
 
