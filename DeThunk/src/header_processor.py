@@ -1,10 +1,10 @@
 import os
 import re
 
-import predefine_subprocessor as PredefineProcessor
-import util.cpp_language as CppUtil
+import header_preprocessor as HeaderPreProcessor
+import header_postprocessor as HeaderPostProcessor
 
-from include_fixer import IncludeFixer
+import util.cpp_language as CppUtil
 
 
 class Options:
@@ -21,8 +21,14 @@ class Options:
     restore_member_variable = bool()
 
     # others
-    # only takes effect for TypedStorage, since the TypedStorage wrapper makes the full type unnecessary.
+    # * only takes effect for TypedStorage, since the TypedStorage wrapper makes the full type unnecessary.
     fix_includes_for_member_variables = True
+    # * template definitions cannot be generated for headergen and may be wrong. class sizes may be wrong if
+    # * empty templates are used in TypedStorage.
+    # * this option will erase the type of the empty template (convert to uchar[size]).
+    fix_size_for_type_with_empty_template_class = True
+    # * this option will and add sizeof & alignof static assertions to members. (only takes effect for TypedStorage)
+    add_sizeof_alignof_static_assertions = True
 
     def __init__(self, args):
         self.base_dir = args.path
@@ -51,11 +57,10 @@ class Options:
         self.set_variable(opt)
 
 
-def process(path_to_file: str, include_fixer: IncludeFixer | None, args: Options):
+def process(path_to_file: str, args: Options):
     assert os.path.isfile(path_to_file)
 
     if path_to_file.endswith('_HeaderOutputPredefine.h'):
-        PredefineProcessor.process(path_to_file)
         return
 
     RECORDED_THUNKS = []
@@ -128,7 +133,9 @@ def process(path_to_file: str, include_fixer: IncludeFixer | None, args: Options
                 continue
 
             # restore member variable:
-            if args.restore_member_variable and '::ll::' in line:  # union { ... };
+            if args.restore_member_variable and stripped_line.startswith(
+                '::ll::'
+            ):  # union { ... };
                 in_member_variable = True
                 is_modified = True
             if in_member_variable and stripped_line.endswith(';'):
@@ -192,23 +199,29 @@ def process(path_to_file: str, include_fixer: IncludeFixer | None, args: Options
                 in_forward_declaration_list = True
             if in_forward_declaration_list:
                 if (
-                    stripped_line.startswith('class')
-                    or stripped_line.startswith('struct')
-                    or stripped_line.startswith('namespace')
+                    stripped_line.startswith('class ')
+                    or stripped_line.startswith('struct ')
+                    or stripped_line.startswith('namespace ')
                 ):
                     forward_declarations.append(stripped_line)
             if stripped_line.startswith('// clang-format on') and in_forward_declaration_list:
                 in_forward_declaration_list = False
 
             # record namespace & classes
-            if not in_forward_declaration_list and args.fix_includes_for_member_variables:
-                if line.startswith('class') or line.startswith(
-                    'struct'
-                ):  # ignore nested class, FIXME: ignore template class
+            if not in_forward_declaration_list:
+                if line.startswith('class ') or line.startswith('struct '):  # ignore nested class
                     founded = CppUtil.find_class_definition(line)
                     if founded:
-                        include_fixer.record_class_definition(
-                            path_to_file, '::'.join(current_namespace), founded
+                        is_template = (
+                            content[content.rfind('\n', 0, -1) :].strip().startswith('template ')
+                        )
+                        is_empty = stripped_line.endswith('{};')
+                        HeaderPostProcessor.record_class_definition(
+                            path_to_file,
+                            '::'.join(current_namespace),
+                            founded,
+                            is_template,
+                            is_empty,
                         )
                 founded = CppUtil.find_namespace_declaration(line)
                 if founded:
@@ -233,8 +246,12 @@ def process(path_to_file: str, include_fixer: IncludeFixer | None, args: Options
                 content += line
         if is_modified:
             if args.fix_includes_for_member_variables and has_typed_storage:
-                include_fixer.add_pending_fix_queue(
+                HeaderPostProcessor.add_pending_fix_includes_queue(
                     path_to_file, forward_declarations, member_variable_types
+                )
+            if args.fix_size_for_type_with_empty_template_class and has_typed_storage:
+                HeaderPostProcessor.add_pending_fix_members_queue(
+                    path_to_file, member_variable_types
                 )
             with open(path_to_file, 'w', encoding='utf-8') as wfile:
                 wfile.write(content)
@@ -243,12 +260,15 @@ def process(path_to_file: str, include_fixer: IncludeFixer | None, args: Options
 def iterate(args: Options):
     assert os.path.isdir(args.base_dir)
 
-    include_fixer = args.fix_includes_for_member_variables and IncludeFixer()
-
     for root, dirs, files in os.walk(args.base_dir):
         for file in files:
             if CppUtil.is_header_file(file):
-                process(os.path.join(root, file), include_fixer, args)
+                path = os.path.join(root, file)
+                # preprocessing: execution time is before each file.
+                HeaderPreProcessor.process(path)
+                # processing: executed immediately after preprocessing is completed.
+                process(path, args)
 
-    if include_fixer:
-        include_fixer.run_fix()
+    # post-processing: executed after all files have been processed.
+    #                  during processing, files that require post-processing will be marked.
+    HeaderPostProcessor.process()
