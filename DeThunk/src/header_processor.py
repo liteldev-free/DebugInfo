@@ -163,7 +163,9 @@ def process(path_to_file: str, args: Options):
                         var_name = f'{var_name}[{array_length}]'
 
                     fun_ptr_pos = type_name.find('(*)')
-                    if -1 != fun_ptr_pos:  # is c-style function ptr
+                    if -1 != fun_ptr_pos and not CppUtil.find_template_name(
+                        type_name, '(*)', disable_regex_word_bound=True
+                    ):  # is c-style function ptr
                         type_name = (
                             type_name[: fun_ptr_pos + 2] + var_name + type_name[fun_ptr_pos + 2 :]
                         )

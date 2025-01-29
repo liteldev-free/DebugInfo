@@ -92,9 +92,8 @@ def find_namespace_declaration(line: str) -> str | None:
     return line[namespace_pos + len('namespace') : left_brace_pos].strip()
 
 
-def find_template_name(full: str, what: str):
-    for matched in re.finditer(rf'\b{re.escape(what)}\b', full):
-        endpos = matched.start()
+def find_template_name(full: str, what: str, disable_regex_word_bound: bool = False):
+    def _impl(endpos: int):
         while True:
             r_angle_bracket_pos = full.rfind('>', 0, endpos)
             l_angle_bracket_pos = full.rfind('<', 0, endpos)
@@ -110,7 +109,17 @@ def find_template_name(full: str, what: str):
             assert len(ret) > 0
             return ret
 
-    return None
+    if not disable_regex_word_bound:
+        for matched in re.finditer(rf'\b{re.escape(what)}\b', full):
+            endpos = matched.start()
+            result = _impl(endpos)
+            if result:
+                return result
+    else:
+        endpos = full.find(what)
+        if endpos == -1:
+            return None
+        return _impl(endpos)
 
 
 def is_full_type_required(namespace_decl: str, class_decl: str, type_decl: str):
