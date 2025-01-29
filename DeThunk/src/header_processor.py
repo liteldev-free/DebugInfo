@@ -4,6 +4,7 @@ import re
 import header_postprocessor as HeaderPostProcessor
 
 import util.cpp_language as CppUtil
+import util.string as StrUtil
 
 
 class Options:
@@ -199,18 +200,14 @@ def process(path_to_file: str, args: Options):
             if stripped_line.startswith('// auto generated forward declare list'):
                 in_forward_declaration_list = True
             if in_forward_declaration_list:
-                if (
-                    stripped_line.startswith('class ')
-                    or stripped_line.startswith('struct ')
-                    or stripped_line.startswith('namespace ')
-                ):
+                if StrUtil.startswith_m(stripped_line, 'class ', 'struct ', 'union ', 'namespace '):
                     forward_declarations.append(stripped_line)
             if stripped_line.startswith('// clang-format on') and in_forward_declaration_list:
                 in_forward_declaration_list = False
 
             # record namespace & classes
             if not in_forward_declaration_list:
-                if line.startswith('class ') or line.startswith('struct '):  # ignore nested class
+                if StrUtil.startswith_m(line, 'class ', 'struct ', 'union '):  # ignore nested class
                     founded = CppUtil.find_class_definition(line)
                     if founded:
                         is_template = (

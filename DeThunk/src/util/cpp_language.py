@@ -5,14 +5,7 @@ C++ Language Utility
 
 import re
 
-
-class ForwardDeclaration:
-    namespace_decl = str()
-    class_decl = str()
-
-    def __init__(self, namespace_decl: str, class_decl: str):
-        self.namespace_decl = namespace_decl
-        self.class_decl = class_decl
+import util.string as StrUtil
 
 
 def is_header_file(path: str):
@@ -20,25 +13,21 @@ def is_header_file(path: str):
 
 
 def find_class_definition(line: str) -> str | None:
-    # class A (no quotation mark)
-    # class A :
-    # class A {
-    # class A { ... }; (in single line)
+    # KEYWORD A (no quotation mark)
+    # KEYWORD A :
+    # KEYWORD A {
+    # KEYWORD A { ... }; (in single line)
 
-    specifier_size = len('class')
-    class_pos = line.find('class ')
-    struct_pos = line.find('struct ')
-    assert class_pos == -1 or struct_pos == -1, f'line = {line}, c = {class_pos}, s = {struct_pos}'
+    keyword_pos, keyword = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+    if keyword_pos == -1:
+        return None
+
+    keyword_size = len(keyword) - 1  # not class defs
 
     left_brace_pos = line.find('{')
     semicolon_pos = line.find(';')
     if semicolon_pos != -1 and (left_brace_pos == -1 or semicolon_pos < left_brace_pos):
         return None  # is forward decl
-    if class_pos == -1:
-        if struct_pos == -1:
-            return None  # is not class defs
-        specifier_size = len('struct')
-        class_pos = struct_pos
 
     end_pos = len(line)
     colon_pos = line.find(':')
@@ -48,9 +37,18 @@ def find_class_definition(line: str) -> str | None:
     if colon_pos != -1:
         end_pos = min(end_pos, colon_pos)
         if l_angle_bracket_pos != -1 and l_angle_bracket_pos < colon_pos:
-            return None  # template specialization (is not currently supported)
+            return None  # template specialization (is not supported)
 
-    return line[class_pos + specifier_size : end_pos].strip()
+    return line[keyword_pos + keyword_size : end_pos].strip()
+
+
+class ForwardDeclaration:
+    namespace_decl = str()
+    class_decl = str()
+
+    def __init__(self, namespace_decl: str, class_decl: str):
+        self.namespace_decl = namespace_decl
+        self.class_decl = class_decl
 
 
 def find_class_forward_declaration(line: str) -> ForwardDeclaration | None:
@@ -65,21 +63,17 @@ def find_class_forward_declaration(line: str) -> ForwardDeclaration | None:
     if namespace_pos != -1 and left_brace_pos != -1:
         namespace_decl = line[namespace_pos + len('namespace') : left_brace_pos].strip()
 
-    specifier_size = len('class')
-    class_pos = line.find('class ')
-    struct_pos = line.find('struct ')
-    assert class_pos == -1 or struct_pos == -1
+    keyword_pos, keyword = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+    if keyword_pos == -1:
+        return None
+
+    keyword_size = len(keyword) - 1  # not class defs
 
     semicolon_pos = line.find(';')
     if semicolon_pos == -1:
         return None
-    if class_pos == -1:
-        if struct_pos == -1:
-            return None
-        specifier_size = len('struct')
-        class_pos = struct_pos
 
-    class_decl = line[class_pos + specifier_size : semicolon_pos].strip()
+    class_decl = line[keyword_pos + keyword_size : semicolon_pos].strip()
     return ForwardDeclaration(namespace_decl, class_decl)
 
 

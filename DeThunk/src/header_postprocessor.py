@@ -54,8 +54,10 @@ def _find_definition(decl: str, in_types: list) -> ClassDefineRecord | None:
     if not CppUtil.is_full_type_required_for_typeset(namespace, clazz, in_types):
         return None
 
-    assert namespace in _class_defs_record, f'namespace not recorded, {namespace}'
-    assert clazz in _class_defs_record[namespace], f'{clazz} not recorded, in {namespace}'
+    assert namespace in _class_defs_record, f'namespace = "{namespace}" is not recorded.'
+    assert clazz in _class_defs_record[namespace], (
+        f'namespace = "{namespace}", class = {clazz} is not recorded.'
+    )
 
     return _class_defs_record[namespace][find_decl.class_decl]
 
