@@ -163,12 +163,16 @@ def process(path_to_file: str, args: Options):
                         type_name = type_name[: type_name.find('[')]
                         var_name = f'{var_name}[{array_length}]'
 
-                    fun_ptr_pos = type_name.find('(*)')
-                    if -1 != fun_ptr_pos and not CppUtil.find_template_name(
-                        type_name, '(*)', disable_regex_word_bound=True
-                    ):  # is c-style function ptr
+                    ptr_id_pos, ptr_id = StrUtil.find_m(type_name, '(*)', '::*)')
+                    if -1 != ptr_id_pos and not CppUtil.find_template_name(
+                        type_name, ptr_id, disable_regex_word_bound=True
+                    ):  # is c-style function ptr or member ptr
+                        # it's a trick, make sure `ptr` endswith '*)'
+                        ptr_id_len = len(ptr_id) - 1
                         type_name = (
-                            type_name[: fun_ptr_pos + 2] + var_name + type_name[fun_ptr_pos + 2 :]
+                            type_name[: ptr_id_pos + ptr_id_len]
+                            + var_name
+                            + type_name[ptr_id_pos + ptr_id_len :]
                         )
                         var_name = ''
 

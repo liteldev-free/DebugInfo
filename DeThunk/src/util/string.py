@@ -15,4 +15,4 @@ def find_m(con: str, *args) -> int:
         pos = con.find(arg)
         if pos != -1:
             return pos, arg
-    return -1
+    return -1, None
