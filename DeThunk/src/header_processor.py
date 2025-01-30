@@ -153,15 +153,25 @@ def process(path_to_file: str, args: Options):
                         f'in {path_to_file}, line="{stripped_line}"'
                     )
 
-                    align = matched[1]  # unused.
-                    size = matched[2]  # unused.
+                    align = int(matched[1])
+                    size = int(matched[2])
                     type_name = matched[3]
                     var_name = matched[4]
+
+                    security_check = ''
+                    if args.add_sizeof_alignof_static_assertions:
+                        security_check += f'\tstatic_assert(sizeof({var_name}) == {size});\n'
+                        security_check += (
+                            f'\tstatic_assert(alignof(decltype({var_name})) == {align});\n'
+                        )
 
                     if type_name.endswith(']'):  # is c-style array
                         array_length = int(type_name[type_name.find('[') + 1 : type_name.find(']')])
                         type_name = type_name[: type_name.find('[')]
                         var_name = f'{var_name}[{array_length}]'
+
+                    if type_name.endswith('&'):  # is reference type
+                        type_name = type_name[:-1] + '*'
 
                     ptr_id_pos, ptr_id = StrUtil.find_m(type_name, '(*)', '::*)')
                     if -1 != ptr_id_pos and not CppUtil.find_template_name(
@@ -176,7 +186,7 @@ def process(path_to_file: str, args: Options):
                         )
                         var_name = ''
 
-                    content += f'\t{type_name} {var_name};\n'
+                    content += f'\t{type_name} {var_name};\n{security_check}'
 
                     member_variable_types.append(type_name)
                     in_member_variable = False
