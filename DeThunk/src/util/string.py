@@ -10,6 +10,13 @@ def startswith_m(con: str, *args) -> bool:
     return False
 
 
+def endswith_m(con: str, *args) -> bool:
+    for arg in args:
+        if con.endswith(arg):
+            return True
+    return False
+
+
 def find_m(con: str, *args) -> int:
     for arg in args:
         pos = con.find(arg)

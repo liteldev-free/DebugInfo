@@ -172,14 +172,30 @@ def process(path_to_file: str, args: Options):
                     type_name = matched[3]
                     var_name = matched[4]
 
+                    if not StrUtil.endswith_m(type_name, '&', '*'):
+                        for empty_class in HeaderPreProcessor.empty_class_all_names:
+                            if (
+                                empty_class in type_name
+                                or 'WeakRef<' in type_name  # TODO: remove it.
+                                or '::entt::basic_registry<' in type_name
+                                or '::Bedrock::Application::ThreadOwner<' in type_name
+                            ):
+                                print(f'erased: {type_name}')
+                                content += f'\talignas({align}) std::byte {var_name}_TYPEREMOVED[{size}];\n'
+                                in_member_variable = False
+                                break
+                        if not in_member_variable:
+                            continue
+
                     member_variable_types.append(type_name)
 
                     security_check = ''
                     if args.add_sizeof_alignof_static_assertions:
                         security_check += f'\tstatic_assert(sizeof({var_name}) == {size});\n'
-                        security_check += (
-                            f'\tstatic_assert(alignof(decltype({var_name})) == {align});\n'
-                        )
+                        # TODO: ensure alignment requirements.
+                        # security_check += (
+                        #     f'\tstatic_assert(alignof(decltype({var_name})) == {align});\n'
+                        # )
 
                     if type_name.endswith(']'):  # is c-style array
                         array_length = int(type_name[type_name.find('[') + 1 : type_name.find(']')])

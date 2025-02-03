@@ -5,6 +5,7 @@ import util.string as StrUtil
 
 # storage
 defined_classes = dict()
+empty_class_all_names = set()
 
 
 class ClassDefine:
@@ -29,6 +30,13 @@ def add_class_record(path: str, namespace: str, class_name: str, is_template: bo
     defined_classes[namespace][class_name] = ClassDefine(
         path[path.find('src/') + 4 :], is_template, is_empty
     )
+
+    if is_empty:
+        all_name = ''
+        if namespace != '':
+            all_name += namespace + '::'
+        all_name += class_name
+        empty_class_all_names.add(all_name)
 
 
 def query_class_record_strict(namespace_decl: str, class_decl: str) -> ClassDefine:
