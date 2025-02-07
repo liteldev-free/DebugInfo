@@ -98,6 +98,7 @@ def process(path_to_file: str, args: Options):
         has_typed_storage = False
         forward_declarations = []
         member_variable_types = []
+        current_unions = []
 
         ll_typed_regex = re.compile(r'TypedStorage<(\d+), (\d+), (.*?)> (\w+);')
         ll_untyped_regex = re.compile(r'UntypedStorage<(\d+), (\d+)> (\w+);')
@@ -190,7 +191,7 @@ def process(path_to_file: str, args: Options):
                     member_variable_types.append(type_name)
 
                     security_check = ''
-                    if args.add_sizeof_alignof_static_assertions:
+                    if args.add_sizeof_alignof_static_assertions and not current_unions:
                         security_check += f'\tstatic_assert(sizeof({var_name}) == {size});\n'
                         # TODO: ensure alignment requirements.
                         # security_check += (
@@ -240,6 +241,12 @@ def process(path_to_file: str, args: Options):
                     continue
 
                 assert False, 'unreachable'
+
+            union_keyword_pos = line.find('union ')
+            if not in_forward_declaration_list and union_keyword_pos != -1:
+                current_unions.append(union_keyword_pos)
+            if current_unions and line.startswith(' ' * current_unions[-1] + '};'):
+                current_unions.pop()
 
             # fix forward declarations
             if stripped_line.startswith('// auto generated forward declare list'):
