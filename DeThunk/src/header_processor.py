@@ -30,6 +30,9 @@ class Options:
     # * this option will and add sizeof & alignof static assertions to members. (only takes effect for TypedStorage)
     add_sizeof_alignof_static_assertions = True
 
+    # * some types of template definitions are not accurate.
+    erase_extra_invalid_types = True
+
     def __init__(self, args):
         self.base_dir = args.path
         self.remove_constructor_thunk = args.remove_constructor_thunk
@@ -175,14 +178,19 @@ def process(path_to_file: str, args: Options):
 
                     if not StrUtil.endswith_m(type_name, '&', '*'):
                         for empty_class in HeaderPreProcessor.empty_class_all_names:
-                            if (
-                                empty_class in type_name
-                                or 'WeakRef<' in type_name  # TODO: remove it.
-                                or '::entt::basic_registry<' in type_name
-                                or '::Bedrock::Application::ThreadOwner<' in type_name
+                            if empty_class in type_name or (
+                                args.erase_extra_invalid_types
+                                and (
+                                    'WeakRef<' in type_name  # TODO: remove it.
+                                    or '::entt::basic_registry<' in type_name
+                                    or '::Bedrock::Application::ThreadOwner<' in type_name
+                                    or '::OwnerPtr<::EntityContext>' in type_name
+                                )
                             ):
-                                print(f'erased: {type_name}')
-                                content += f'\talignas({align}) std::byte {var_name}_TYPEREMOVED[{size}];\n'
+                                # print(f'erased: {type_name}')
+                                content += (
+                                    f'\talignas({align}) std::byte {var_name}_TYPEERASED[{size}];\n'
+                                )
                                 in_member_variable = False
                                 break
                         if not in_member_variable:
