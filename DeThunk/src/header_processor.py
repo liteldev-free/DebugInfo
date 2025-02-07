@@ -106,7 +106,7 @@ def process(path_to_file: str, args: Options):
         def regex_preprocess_name(con: str):
             # typed storage can be very complex, so we need to preprocess it.
             # TODO: find a better way.
-            return re.sub(r'\s+', ' ', con).replace('< ', '<')
+            return re.sub(r'\s+', ' ', con).replace('< ', '<').replace(':: ', '::')
 
         # tmp
         content = ''
