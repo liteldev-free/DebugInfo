@@ -199,9 +199,9 @@ def process(path_to_file: str, args: Options):
                         # )
 
                     if type_name.endswith(']'):  # is c-style array
-                        array_length = int(type_name[type_name.find('[') + 1 : type_name.find(']')])
+                        array_defs = type_name[type_name.find('[') : type_name.rfind(']') + 1]
                         type_name = type_name[: type_name.find('[')]
-                        var_name = f'{var_name}[{array_length}]'
+                        var_name = var_name + array_defs
 
                     if type_name.endswith('&'):  # is reference type
                         type_name = type_name[:-1] + '*'
