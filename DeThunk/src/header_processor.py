@@ -33,6 +33,10 @@ class Options:
     # * some types of template definitions are not accurate.
     erase_extra_invalid_types = True
 
+    # * in msvc, 'const' object must be initialized if not 'extern' (c2734)
+    # * see also https://reviews.llvm.org/D45978
+    fix_msvc_c2734 = True
+
     def __init__(self, args):
         self.base_dir = args.path
         self.remove_constructor_thunk = args.remove_constructor_thunk
@@ -146,6 +150,9 @@ def process(path_to_file: str, args: Options):
                         '::std::add_lvalue_reference_t<',
                         '::std::remove_reference_t<::std::add_lvalue_reference_t<',
                     )
+
+                if args.fix_msvc_c2734 and stripped_line.find('static ') == -1:
+                    stripped_line = 'extern ' + stripped_line
 
                 content += f'\t{stripped_line}\n'
                 continue
