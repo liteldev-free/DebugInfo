@@ -1,7 +1,7 @@
 #pragma once
 
 #include "binary/COFF.h"
-#include "data.h"
+#include "symbol_data.h"
 
 #include <llvm/DebugInfo/PDB/Native/PDBFileBuilder.h>
 #include <llvm/Support/Allocator.h>
@@ -10,7 +10,7 @@ namespace makepdb::binary {
 
 class PDB {
 public:
-    explicit PDB(COFF&& COFF, Data&& SymbolData);
+    explicit PDB(COFF&& COFF, SymbolData&& SymbolData);
 
     void WriteTo(std::string_view Path);
 
@@ -22,8 +22,8 @@ private:
     inline void BuildTPI();
     inline void BuildGSI();
 
-    COFF OwningCOFF;
-    Data OwningSymbolData;
+    COFF       OwningCOFF;
+    SymbolData OwningSymbolData;
 
     uint64_t ImageBase;
 

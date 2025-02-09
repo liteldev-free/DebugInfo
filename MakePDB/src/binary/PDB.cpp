@@ -11,7 +11,7 @@ using namespace llvm::pdb;
 
 namespace makepdb::binary {
 
-PDB::PDB(COFF&& COFF, Data&& SymbolData)
+PDB::PDB(COFF&& COFF, SymbolData&& SymbolData)
 : OwningCOFF(std::move(COFF)),
   OwningSymbolData(std::move(SymbolData)),
   Builder(Allocator) {
@@ -94,7 +94,7 @@ void PDB::BuildTPI() {
 
 void PDB::BuildGSI() {
     std::vector<BulkPublic> PublicsIn;
-    OwningSymbolData.forEach([&PublicsIn, this](const DataEntity& E) {
+    OwningSymbolData.forEach([&PublicsIn, this](const SymbolDataEntity& E) {
         BulkPublic Symbol;
 
         auto SectionIndex = OwningCOFF.SectionIndex(E.RVA - ImageBase);

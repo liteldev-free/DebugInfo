@@ -2,18 +2,18 @@
 
 namespace makepdb {
 
-struct DataEntity {
+struct SymbolDataEntity {
     std::string SymbolName;
     uint64_t    RVA;
     bool        IsFunction;
 
-    bool operator==(const DataEntity& other) const {
+    bool operator==(const SymbolDataEntity& other) const {
         return SymbolName == other.SymbolName && RVA == other.RVA
             && IsFunction == other.IsFunction;
     }
 
     struct H {
-        size_t operator()(const DataEntity E) const {
+        size_t operator()(const SymbolDataEntity E) const {
             size_t h1 = std::hash<std::string>{}(E.SymbolName);
             size_t h2 = std::hash<uint64_t>{}(E.RVA);
             size_t h3 = std::hash<bool>{}(E.IsFunction);
@@ -22,14 +22,14 @@ struct DataEntity {
     };
 };
 
-class Data {
+class SymbolData {
 public:
-    explicit Data(std::string_view Path);
+    explicit SymbolData(std::string_view Path);
 
-    void forEach(const std::function<void(DataEntity)> Callback);
+    void forEach(const std::function<void(SymbolDataEntity)> Callback);
 
 private:
-    std::unordered_set<DataEntity, DataEntity::H> Entities;
+    std::unordered_set<SymbolDataEntity, SymbolDataEntity::H> Entities;
 };
 
 } // namespace makepdb
