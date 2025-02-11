@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) try {
 
     binary::PDB pdb(std::move(server_program), std::move(symbol_data));
 
-    pdb.WriteTo(args.output_path);
+    pdb.write(args.output_path);
 
     return 0;
 } catch (const std::exception& e) {

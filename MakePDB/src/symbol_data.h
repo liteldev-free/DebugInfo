@@ -3,20 +3,20 @@
 namespace makepdb {
 
 struct SymbolDataEntity {
-    std::string SymbolName;
-    uint64_t    RVA;
-    bool        IsFunction;
+    std::string symbol_name;
+    uint64_t    rva;
+    bool        is_function;
 
     bool operator==(const SymbolDataEntity& other) const {
-        return SymbolName == other.SymbolName && RVA == other.RVA
-            && IsFunction == other.IsFunction;
+        return symbol_name == other.symbol_name && rva == other.rva
+            && is_function == other.is_function;
     }
 
-    struct H {
-        size_t operator()(const SymbolDataEntity E) const {
-            size_t h1 = std::hash<std::string>{}(E.SymbolName);
-            size_t h2 = std::hash<uint64_t>{}(E.RVA);
-            size_t h3 = std::hash<bool>{}(E.IsFunction);
+    struct Hash {
+        size_t operator()(const SymbolDataEntity entity) const {
+            size_t h1 = std::hash<std::string>{}(entity.symbol_name);
+            size_t h2 = std::hash<uint64_t>{}(entity.rva);
+            size_t h3 = std::hash<bool>{}(entity.is_function);
             return h1 ^ (h2 << 1) ^ (h3 << 2);
         }
     };
@@ -24,12 +24,12 @@ struct SymbolDataEntity {
 
 class SymbolData {
 public:
-    explicit SymbolData(std::string_view Path);
+    explicit SymbolData(std::string_view path);
 
-    void forEach(const std::function<void(SymbolDataEntity)> Callback);
+    void for_each(const std::function<void(SymbolDataEntity)> callback);
 
 private:
-    std::unordered_set<SymbolDataEntity, SymbolDataEntity::H> Entities;
+    std::unordered_set<SymbolDataEntity, SymbolDataEntity::Hash> m_entities;
 };
 
 } // namespace makepdb

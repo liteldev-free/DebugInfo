@@ -2,68 +2,69 @@
 
 namespace makepdb::binary {
 
-COFF::COFF(std::string_view Path) {
+COFF::COFF(std::string_view path) {
     using namespace object;
 
-    auto ObjOrErr = ObjectFile::createObjectFile(Path);
-    if (!ObjOrErr) {
+    auto obj_or_err = ObjectFile::createObjectFile(path);
+    if (!obj_or_err) {
         throw std::runtime_error("Failed to create object file.");
     }
 
-    if (!isa<COFFObjectFile>(ObjOrErr->getBinary())) {
+    if (!isa<COFFObjectFile>(obj_or_err->getBinary())) {
         throw std::runtime_error("Is not a valid PE file.");
     }
 
-    auto Bin = ObjOrErr->takeBinary();
+    auto bin = obj_or_err->takeBinary();
 
-    OwningBinary = object::OwningBinary(
-        static_unique_ptr_cast<COFFObjectFile>(std::move(Bin.first)),
-        std::move(Bin.second)
+    m_owning_binary = object::OwningBinary(
+        static_unique_ptr_cast<COFFObjectFile>(std::move(bin.first)),
+        std::move(bin.second)
     );
 }
 
-codeview::PDB70DebugInfo COFF::DebugInfo() const {
-    const codeview::DebugInfo* DebugInfo;
-    StringRef                  PDBFileName;
+codeview::PDB70DebugInfo COFF::get_debug_info() const {
+    const codeview::DebugInfo* debug_info;
+    StringRef                  pdb_file_name;
 
-    if (OwningCOFF().getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo) {
+    if (get_owning_coff().getDebugPDBInfo(debug_info, pdb_file_name)
+        || !debug_info) {
         throw std::runtime_error("Failed to get pdb info from coff file.");
     }
 
-    if (DebugInfo->Signature.CVSignature != OMF::Signature::PDB70) {
+    if (debug_info->Signature.CVSignature != OMF::Signature::PDB70) {
         throw std::runtime_error("Unsupported PDB format.");
     }
 
-    return DebugInfo->PDB70;
+    return debug_info->PDB70;
 }
 
-size_t COFF::SectionIndex(uint64_t Offset) const {
+size_t COFF::get_section_index(uint64_t offset) const {
     using namespace object;
 
-    uint64_t CurrentIndex = 0;
-    for (const SectionRef& Sec : OwningCOFF().sections()) {
-        const coff_section* Section = OwningCOFF().getCOFFSection(Sec);
-        if (Offset >= Section->VirtualAddress
-            && Offset < Section->VirtualAddress + Section->VirtualSize) {
-            return CurrentIndex;
+    uint64_t current_index = 0;
+    for (const SectionRef& sec_ref : get_owning_coff().sections()) {
+        const coff_section* section = get_owning_coff().getCOFFSection(sec_ref);
+        if (offset >= section->VirtualAddress
+            && offset < section->VirtualAddress + section->VirtualSize) {
+            return current_index;
         }
-        CurrentIndex++;
+        current_index++;
     }
     throw std::runtime_error("Offset is not in any section.");
 }
 
-object::coff_section* COFF::SectionTable() {
+object::coff_section* COFF::get_section_table() {
     return reinterpret_cast<object::coff_section*>(
-        OwningCOFF().section_begin()->getRawDataRefImpl().p
+        get_owning_coff().section_begin()->getRawDataRefImpl().p
     );
 }
 
-uint32_t COFF::NumberOfSections() const {
-    return OwningCOFF().getNumberOfSections();
+uint32_t COFF::get_number_of_sections() const {
+    return get_owning_coff().getNumberOfSections();
 }
 
-object::COFFObjectFile const& COFF::OwningCOFF() const {
-    return *OwningBinary.getBinary();
+object::COFFObjectFile const& COFF::get_owning_coff() const {
+    return *m_owning_binary.getBinary();
 }
 
 } // namespace makepdb::binary

@@ -6,18 +6,18 @@ namespace makepdb::binary {
 
 class COFF {
 public:
-    explicit COFF(std::string_view Path);
+    explicit COFF(std::string_view path);
 
-    codeview::PDB70DebugInfo DebugInfo() const;
+    codeview::PDB70DebugInfo get_debug_info() const;
 
-    size_t                SectionIndex(uint64_t Offset) const;
-    object::coff_section* SectionTable();
-    uint32_t              NumberOfSections() const;
+    size_t                get_section_index(uint64_t offset) const;
+    object::coff_section* get_section_table();
+    uint32_t              get_number_of_sections() const;
 
-    object::COFFObjectFile const& OwningCOFF() const;
+    object::COFFObjectFile const& get_owning_coff() const;
 
 private:
-    object::OwningBinary<object::COFFObjectFile> OwningBinary;
+    object::OwningBinary<object::COFFObjectFile> m_owning_binary;
 };
 
 } // namespace makepdb::binary

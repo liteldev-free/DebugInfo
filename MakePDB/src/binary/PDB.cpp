@@ -11,109 +11,114 @@ using namespace llvm::pdb;
 
 namespace makepdb::binary {
 
-PDB::PDB(COFF&& COFF, SymbolData&& SymbolData)
-: OwningCOFF(std::move(COFF)),
-  OwningSymbolData(std::move(SymbolData)),
-  Builder(Allocator) {
-    constexpr uint32_t BlockSize = 4096;
-    if (Builder.initialize(BlockSize)) {
+PDB::PDB(COFF&& coff, SymbolData&& symbol_data)
+: m_owning_coff(std::move(coff)),
+  m_owning_symbol_data(std::move(symbol_data)),
+  m_builder(m_allocator) {
+    constexpr uint32_t block_size = 4096;
+    if (m_builder.initialize(block_size)) {
         throw std::runtime_error("Failed to initialize pdb file builder.");
     }
 
     for (uint32_t I = 0; I < pdb::kSpecialStreamCount; ++I) {
-        if (!Builder.getMsfBuilder().addStream(0)) {
+        if (!m_builder.getMsfBuilder().addStream(0)) {
             throw std::runtime_error("Failed to add initial stream.");
         }
     }
 
-    ImageBase = OwningCOFF.OwningCOFF().getImageBase();
+    m_image_base = m_owning_coff.get_owning_coff().getImageBase();
 }
 
-void PDB::WriteTo(std::string_view Path) {
-    Build();
+void PDB::write(std::string_view path) {
+    build();
 
-    auto Guid = Builder.getInfoBuilder().getGuid();
-    if (Builder.commit(Path, &Guid)) {
+    auto guid = m_builder.getInfoBuilder().getGuid();
+    if (m_builder.commit(path, &guid)) {
         throw std::runtime_error("Failed to create pdb!");
     }
 }
 
-void PDB::Build() {
-    BuildInfo();
-    BuildDBI();
-    BuildTPI();
-    BuildGSI();
+void PDB::build() {
+    build_Info();
+    build_DBI();
+    build_TPI();
+    build_GSI();
 }
 
-void PDB::BuildInfo() {
-    auto  PDBInfo     = OwningCOFF.DebugInfo();
-    auto& InfoBuilder = Builder.getInfoBuilder();
+void PDB::build_Info() {
+    auto  pdb_info     = m_owning_coff.get_debug_info();
+    auto& info_builder = m_builder.getInfoBuilder();
 
-    InfoBuilder.setVersion(PdbRaw_ImplVer::PdbImplVC70);
-    InfoBuilder.setAge(PDBInfo.Age);
-    InfoBuilder.setGuid(*reinterpret_cast<codeview::GUID*>(PDBInfo.Signature));
-    InfoBuilder.addFeature(PdbRaw_FeatureSig::VC140);
+    info_builder.setVersion(PdbRaw_ImplVer::PdbImplVC70);
+    info_builder.setAge(pdb_info.Age);
+    info_builder.setGuid(*reinterpret_cast<codeview::GUID*>(pdb_info.Signature)
+    );
+    info_builder.addFeature(PdbRaw_FeatureSig::VC140);
 }
 
-void PDB::BuildDBI() {
-    auto  PDBInfo    = OwningCOFF.DebugInfo();
-    auto& DbiBuilder = Builder.getDbiBuilder();
+void PDB::build_DBI() {
+    auto  pdb_info = m_owning_coff.get_debug_info();
+    auto& DBI      = m_builder.getDbiBuilder();
 
-    DbiBuilder.setVersionHeader(PdbRaw_DbiVer::PdbDbiV70);
-    DbiBuilder.setAge(PDBInfo.Age);
-    DbiBuilder.setMachineType(PDB_Machine::Amd64);
-    DbiBuilder.setFlags(DbiFlags::FlagStrippedMask);
-    DbiBuilder.setBuildNumber(14, 11); // LLVM is compatible with LINK 14.11
+    DBI.setVersionHeader(PdbRaw_DbiVer::PdbDbiV70);
+    DBI.setAge(pdb_info.Age);
+    DBI.setMachineType(PDB_Machine::Amd64);
+    DBI.setFlags(DbiFlags::FlagStrippedMask);
+    DBI.setBuildNumber(14, 11); // LLVM is compatible with LINK 14.11
 
     // Add sections.
-    auto SectionTable     = OwningCOFF.SectionTable();
-    auto NumberOfSections = OwningCOFF.NumberOfSections();
+    auto section_table      = m_owning_coff.get_section_table();
+    auto number_of_sections = m_owning_coff.get_number_of_sections();
 
-    auto SectionDataRef = ArrayRef<uint8_t>(
-        (uint8_t*)SectionTable,
-        OwningCOFF.NumberOfSections() * sizeof(object::coff_section)
+    auto section_data_ref = ArrayRef<uint8_t>(
+        (uint8_t*)section_table,
+        m_owning_coff.get_number_of_sections() * sizeof(object::coff_section)
     );
 
-    auto SectionTableRef = ArrayRef<object::coff_section>(
-        (const object::coff_section*)SectionDataRef.data(),
-        NumberOfSections
+    auto section_table_ref = ArrayRef<object::coff_section>(
+        (const object::coff_section*)section_data_ref.data(),
+        number_of_sections
     );
 
-    DbiBuilder.createSectionMap(SectionTableRef);
+    DBI.createSectionMap(section_table_ref);
 
     // Add COFF section header stream.
-    if (DbiBuilder.addDbgStream(DbgHeaderType::SectionHdr, SectionDataRef)) {
+    if (DBI.addDbgStream(DbgHeaderType::SectionHdr, section_data_ref)) {
         throw std::runtime_error("Failed to add dbg stream.");
     }
 }
 
-void PDB::BuildTPI() {
-    Builder.getTpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
-    Builder.getIpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
+void PDB::build_TPI() {
+    m_builder.getTpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
+    m_builder.getIpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
 }
 
-void PDB::BuildGSI() {
-    std::vector<BulkPublic> PublicsIn;
-    OwningSymbolData.forEach([&PublicsIn, this](const SymbolDataEntity& E) {
-        BulkPublic Symbol;
+void PDB::build_GSI() {
+    std::vector<BulkPublic> publics;
+    m_owning_symbol_data.for_each([&publics,
+                                   this](const SymbolDataEntity& entity) {
+        BulkPublic symbol;
 
-        auto SectionIndex = OwningCOFF.SectionIndex(E.RVA - ImageBase);
-        auto SectionOrErr =
-            OwningCOFF.OwningCOFF().getSection(SectionIndex + 1);
-        if (!SectionOrErr) {
+        auto section_index =
+            m_owning_coff.get_section_index(entity.rva - m_image_base);
+        auto section_or_err =
+            m_owning_coff.get_owning_coff().getSection(section_index + 1);
+        if (!section_or_err) {
             throw std::runtime_error("Invalid section.");
         }
 
-        Symbol.Name    = strdup(E.SymbolName.c_str());
-        Symbol.NameLen = E.SymbolName.size();
-        Symbol.Segment = SectionIndex + 1;
-        Symbol.Offset  = E.RVA - ImageBase - SectionOrErr.get()->VirtualAddress;
-        if (E.IsFunction) Symbol.setFlags(codeview::PublicSymFlags::Function);
+        symbol.Name    = strdup(entity.symbol_name.c_str());
+        symbol.NameLen = entity.symbol_name.size();
+        symbol.Segment = section_index + 1;
+        symbol.Offset =
+            entity.rva - m_image_base - section_or_err.get()->VirtualAddress;
+        if (entity.is_function)
+            symbol.setFlags(codeview::PublicSymFlags::Function);
 
-        PublicsIn.emplace_back(Symbol);
+        publics.emplace_back(symbol);
     });
 
-    Builder.getGsiBuilder().addPublicSymbols(std::move(PublicsIn));
+    m_builder.getGsiBuilder().addPublicSymbols(std::move(publics));
 }
 
 } // namespace makepdb::binary

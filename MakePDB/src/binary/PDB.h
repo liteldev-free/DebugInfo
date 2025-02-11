@@ -10,25 +10,25 @@ namespace makepdb::binary {
 
 class PDB {
 public:
-    explicit PDB(COFF&& COFF, SymbolData&& SymbolData);
+    explicit PDB(COFF&& coff, SymbolData&& symbol_data);
 
-    void WriteTo(std::string_view Path);
+    void write(std::string_view path);
 
 private:
-    void Build();
+    void build();
 
-    inline void BuildInfo();
-    inline void BuildDBI();
-    inline void BuildTPI();
-    inline void BuildGSI();
+    inline void build_Info();
+    inline void build_DBI();
+    inline void build_TPI();
+    inline void build_GSI();
 
-    COFF       OwningCOFF;
-    SymbolData OwningSymbolData;
+    COFF       m_owning_coff;
+    SymbolData m_owning_symbol_data;
 
-    uint64_t ImageBase;
+    uint64_t m_image_base;
 
-    BumpPtrAllocator    Allocator;
-    pdb::PDBFileBuilder Builder;
+    BumpPtrAllocator    m_allocator;
+    pdb::PDBFileBuilder m_builder;
 };
 
 } // namespace makepdb::binary
