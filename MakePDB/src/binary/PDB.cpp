@@ -11,10 +11,7 @@ using namespace llvm::pdb;
 
 namespace makepdb::binary {
 
-PDB::PDB(COFF&& coff, SymbolData&& symbol_data)
-: m_owning_coff(std::move(coff)),
-  m_owning_symbol_data(std::move(symbol_data)),
-  m_builder(m_allocator) {
+PDB::PDB() : m_builder(m_allocator) {
     constexpr uint32_t block_size = 4096;
     if (m_builder.initialize(block_size)) {
         throw std::runtime_error("Failed to initialize pdb file builder.");
@@ -25,8 +22,6 @@ PDB::PDB(COFF&& coff, SymbolData&& symbol_data)
             throw std::runtime_error("Failed to add initial stream.");
         }
     }
-
-    m_image_base = m_owning_coff.get_owning_coff().getImageBase();
 }
 
 void PDB::write(std::string_view path) {
@@ -46,18 +41,17 @@ void PDB::build() {
 }
 
 void PDB::build_Info() {
-    auto  pdb_info     = m_owning_coff.get_debug_info();
-    auto& info_builder = m_builder.getInfoBuilder();
+    auto  pdb_info = m_owning_coff->get_debug_info();
+    auto& Info     = m_builder.getInfoBuilder();
 
-    info_builder.setVersion(PdbRaw_ImplVer::PdbImplVC70);
-    info_builder.setAge(pdb_info.Age);
-    info_builder.setGuid(*reinterpret_cast<codeview::GUID*>(pdb_info.Signature)
-    );
-    info_builder.addFeature(PdbRaw_FeatureSig::VC140);
+    Info.setVersion(PdbRaw_ImplVer::PdbImplVC70);
+    Info.setAge(pdb_info.Age);
+    Info.setGuid(*reinterpret_cast<codeview::GUID*>(pdb_info.Signature));
+    Info.addFeature(PdbRaw_FeatureSig::VC140);
 }
 
 void PDB::build_DBI() {
-    auto  pdb_info = m_owning_coff.get_debug_info();
+    auto  pdb_info = m_owning_coff->get_debug_info();
     auto& DBI      = m_builder.getDbiBuilder();
 
     DBI.setVersionHeader(PdbRaw_DbiVer::PdbDbiV70);
@@ -67,12 +61,12 @@ void PDB::build_DBI() {
     DBI.setBuildNumber(14, 11); // LLVM is compatible with LINK 14.11
 
     // Add sections.
-    auto section_table      = m_owning_coff.get_section_table();
-    auto number_of_sections = m_owning_coff.get_number_of_sections();
+    auto section_table      = m_owning_coff->get_section_table();
+    auto number_of_sections = m_owning_coff->get_number_of_sections();
 
     auto section_data_ref = ArrayRef<uint8_t>(
         (uint8_t*)section_table,
-        m_owning_coff.get_number_of_sections() * sizeof(object::coff_section)
+        m_owning_coff->get_number_of_sections() * sizeof(object::coff_section)
     );
 
     auto section_table_ref = ArrayRef<object::coff_section>(
@@ -89,20 +83,36 @@ void PDB::build_DBI() {
 }
 
 void PDB::build_TPI() {
-    m_builder.getTpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
-    m_builder.getIpiBuilder().setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
+    auto& TPI = m_builder.getTpiBuilder();
+    auto& IPI = m_builder.getIpiBuilder();
+
+    TPI.setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
+    IPI.setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
+
+    if (m_owning_raw_type_data) {
+        m_owning_raw_type_data->for_each<RawTypeData::TPI>(
+            [&TPI](codeview::TypeIndex index, const codeview::CVType& type) {
+                TPI.addTypeRecord(type.RecordData, std::nullopt);
+            }
+        );
+        m_owning_raw_type_data->for_each<RawTypeData::IPI>(
+            [&IPI](codeview::TypeIndex index, const codeview::CVType& type) {
+                IPI.addTypeRecord(type.RecordData, std::nullopt);
+            }
+        );
+    }
 }
 
 void PDB::build_GSI() {
     std::vector<BulkPublic> publics;
-    m_owning_symbol_data.for_each([&publics,
-                                   this](const SymbolDataEntity& entity) {
+    m_owning_symbol_data->for_each([&publics,
+                                    this](const SymbolDataEntity& entity) {
         BulkPublic symbol;
 
         auto section_index =
-            m_owning_coff.get_section_index(entity.rva - m_image_base);
+            m_owning_coff->get_section_index(entity.rva - m_image_base);
         auto section_or_err =
-            m_owning_coff.get_owning_coff().getSection(section_index + 1);
+            m_owning_coff->get_owning_coff().getSection(section_index + 1);
         if (!section_or_err) {
             throw std::runtime_error("Invalid section.");
         }
