@@ -25,7 +25,7 @@ SymbolData::SymbolData(std::string_view path) {
 }
 
 void SymbolData::for_each(const std::function<void(SymbolDataEntity)> callback
-) {
+) const {
     for (const auto& entity : m_entities) callback(entity);
 }
 

@@ -26,7 +26,7 @@ class SymbolData {
 public:
     explicit SymbolData(std::string_view path);
 
-    void for_each(const std::function<void(SymbolDataEntity)> callback);
+    void for_each(const std::function<void(SymbolDataEntity)> callback) const;
 
 private:
     std::unordered_set<SymbolDataEntity, SymbolDataEntity::Hash> m_entities;
