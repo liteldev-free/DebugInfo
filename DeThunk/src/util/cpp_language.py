@@ -18,8 +18,8 @@ def find_class_definition(line: str) -> str | None:
     # KEYWORD A {
     # KEYWORD A { ... }; (in single line)
 
-    keyword_pos, keyword = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
-    if keyword_pos == -1:
+    keyword_pos, keyword = StrUtil.find_m(line, 'enum class ', 'class ', 'struct ', 'union ')
+    if keyword_pos == -1 or keyword == 'enum class ':
         return None
 
     keyword_size = len(keyword) - 1  # not class defs
