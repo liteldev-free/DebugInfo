@@ -39,7 +39,11 @@ def find_class_definition(line: str) -> str | None:
         if l_angle_bracket_pos != -1 and l_angle_bracket_pos < colon_pos:
             return None  # template specialization (is not supported)
 
-    return line[keyword_pos + keyword_size : end_pos].strip()
+    result = line[keyword_pos + keyword_size : end_pos].strip()
+    if '>' in result:
+        return None
+
+    return result
 
 
 class ForwardDeclaration:

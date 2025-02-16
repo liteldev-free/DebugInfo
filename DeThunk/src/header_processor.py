@@ -37,6 +37,10 @@ class Options:
     # * see also https://reviews.llvm.org/D45978
     fix_msvc_c2734 = True
 
+    # * try to initialize each class dynamically to ensure that the generated debug information is complete.
+    # * this will ENSURE that all classes have a default constructor.
+    add_trivial_dynamic_initializer = True
+
     def __init__(self, args):
         self.base_dir = args.path
         self.remove_constructor_thunk = args.remove_constructor_thunk

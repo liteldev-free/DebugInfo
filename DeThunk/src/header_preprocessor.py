@@ -21,12 +21,12 @@ class ClassDefine:
 
 def add_class_record(path: str, namespace: str, class_name: str, is_template: bool, is_empty: bool):
     assert len(path) > 0 and len(class_name) > 0
-    assert '::' not in class_name  # c++ does not support forward declaration for nested class.
     if namespace not in defined_classes:
         defined_classes[namespace] = {}
     assert class_name not in defined_classes[namespace], (
         f'path = {path}, ns = {namespace}, cl = {class_name}'
     )
+    print(f'path = {path}, ns = {namespace}, cl = {class_name}')
     defined_classes[namespace][class_name] = ClassDefine(
         path[path.find('src/') + 4 :], is_template, is_empty
     )
@@ -58,6 +58,7 @@ def process(path_to_file: str):
         # states
         in_forward_declaration_list = False
         current_namespace = []
+        current_classes = []
 
         # tmp
         content = ''
@@ -72,22 +73,32 @@ def process(path_to_file: str):
 
             # record namespace & classes
             if not in_forward_declaration_list:
-                if StrUtil.startswith_m(line, 'class ', 'struct ', 'union '):  # ignore nested class
-                    founded = CppUtil.find_class_definition(line)
-                    if founded:
-                        is_template = (
-                            content[content.rfind('\n', 0, -1) :].strip().startswith('template ')
-                        )
-                        is_empty = stripped_line.endswith('{};')
-                        add_class_record(
-                            path_to_file,
-                            '::'.join(current_namespace),
-                            founded,
-                            is_template,
-                            is_empty,
-                        )
-                founded = CppUtil.find_namespace_declaration(line)
-                if founded:
-                    current_namespace.append(founded)
+                founded_cl = CppUtil.find_class_definition(line)
+                if founded_cl:  # ignore anonymous classes.
+                    is_template = (
+                        content[content.rfind('\n', 0, -1) :].strip().startswith('template ')
+                    )
+                    is_empty = stripped_line.endswith('{};')
+                    nested_cl = ''
+                    if current_classes:
+                        for pair in current_classes:
+                            nested_cl += pair[1] + '::'
+                    add_class_record(
+                        path_to_file,
+                        '::'.join(current_namespace),
+                        nested_cl + founded_cl,
+                        is_template,
+                        is_empty,
+                    )
+                    class_keyword_pos, _ = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+                    assert class_keyword_pos != -1, f"path = {path_to_file}, line = '{line}'"
+
+                    current_classes.append([class_keyword_pos, founded_cl])
+                founded_ns = CppUtil.find_namespace_declaration(line)
+                if founded_ns:
+                    current_namespace.append(founded_ns)
                 if '// namespace' in stripped_line:
                     current_namespace.pop()
+
+            if current_classes and line.startswith(' ' * (current_classes[-1][0]) + '};'):
+                current_classes.pop()
