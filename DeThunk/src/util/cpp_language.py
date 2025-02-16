@@ -175,7 +175,7 @@ def is_full_type_required(namespace_decl: str, class_decl: str, type_decl: str):
         'shared_ptr',
         'unique_ptr',
         'weak_ptr',
-        'vector',
+        # 'vector',
         'queue',
         'set',
         'function',

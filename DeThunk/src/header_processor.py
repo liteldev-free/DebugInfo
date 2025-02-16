@@ -106,10 +106,12 @@ def process(path_to_file: str, args: Options):
         in_static_variable = False
         in_member_variable = False
         in_forward_declaration_list = False
+        in_invalid_default_ctors = False
         has_typed_storage = False
         forward_declarations = []
         member_variable_types = []
         current_unions = []
+        current_classes = []
 
         ll_typed_regex = re.compile(r'TypedStorage<(\d+), (\d+), (.*?)> (\w+);')
         ll_untyped_regex = re.compile(r'UntypedStorage<(\d+), (\d+)> (\w+);')
@@ -207,6 +209,9 @@ def process(path_to_file: str, args: Options):
                         if not in_member_variable:
                             continue
 
+                    if args.add_trivial_dynamic_initializer:
+                        type_name = type_name.replace(' const', '')
+
                     member_variable_types.append(type_name)
 
                     security_check = ''
@@ -267,6 +272,18 @@ def process(path_to_file: str, args: Options):
             if current_unions and line.startswith(' ' * current_unions[-1] + '};'):
                 current_unions.pop()
 
+            if not in_forward_declaration_list:
+                founded_cl = CppUtil.find_class_definition(line)
+                if founded_cl:
+                    class_keyword_pos, _ = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+                    assert class_keyword_pos != -1, f"path = {path_to_file}, line = '{line}'"
+
+                    if not stripped_line.endswith('{};'):
+                        current_classes.append([class_keyword_pos, founded_cl])
+
+            if current_classes and line.startswith(' ' * (current_classes[-1][0]) + '};'):
+                current_classes.pop()
+
             # fix forward declarations
             if stripped_line.startswith('// auto generated forward declare list'):
                 in_forward_declaration_list = True
@@ -290,6 +307,34 @@ def process(path_to_file: str, args: Options):
                     # remove previous access specifier.
                     content = content[: content.rfind('public:')]
                     content = content[: content.rfind('\n')]  # for nested classes
+
+            if args.add_trivial_dynamic_initializer:
+                if in_invalid_default_ctors:
+                    if 'operator=' in line or 'const&' in line or '()' in line:
+                        content += '\t// ' + stripped_line + '\n'
+                        continue
+                    else:
+                        in_invalid_default_ctors = False
+                if (
+                    args.add_trivial_dynamic_initializer
+                    and '// prevent constructor by default' in line
+                ):
+                    in_invalid_default_ctors = True
+
+                if current_classes and stripped_line.endswith(';'):
+                    begin_pos = None
+                    if not stripped_line.startswith('MCAPI'):
+                        begin_pos = content.rfind('MCAPI')
+                        check_pos = content.rfind(';')
+                        if begin_pos > check_pos:
+                            stripped_line = content[begin_pos:] + stripped_line
+                            stripped_line = regex_preprocess_name(stripped_line)
+                    if f' {current_classes[-1][1]}(' in stripped_line:
+                        if begin_pos:
+                            content = content[:begin_pos]
+                        content += '\t// ' + stripped_line + '\n'
+                        continue
+
             if not in_useless_thunk:
                 content += line
         if args.fix_includes_for_member_variables and has_typed_storage:
@@ -307,9 +352,14 @@ def process(path_to_file: str, args: Options):
                     for cl in classes:
                         var_name = 'dummy__'
                         if ns:
-                            var_name += ns.replace('::', '_')
+                            var_name += ns.replace('::', '_') + '_'
                         var_name += cl.replace('::', '_')
-                        content += f'\ninline {ns}::{cl} {var_name};'
+                        full_name = ns
+                        if ns:
+                            full_name += '::'
+                        full_name += cl
+                        if full_name not in HeaderPreProcessor.abstract_class_all_names:
+                            content += f'\ninline {full_name} {var_name};'
         if is_modified:
             with open(path_to_file, 'w', encoding='utf-8') as wfile:
                 wfile.write(content)
