@@ -5,6 +5,7 @@ import util.string as StrUtil
 
 # storage
 defined_classes = dict()
+defined_classes_path = dict()
 empty_class_all_names = set()
 
 
@@ -26,10 +27,15 @@ def add_class_record(path: str, namespace: str, class_name: str, is_template: bo
     assert class_name not in defined_classes[namespace], (
         f'path = {path}, ns = {namespace}, cl = {class_name}'
     )
-    print(f'path = {path}, ns = {namespace}, cl = {class_name}')
-    defined_classes[namespace][class_name] = ClassDefine(
-        path[path.find('src/') + 4 :], is_template, is_empty
-    )
+
+    rpath = path[path.find('src/') + 4 :]
+    defined_classes[namespace][class_name] = ClassDefine(rpath, is_template, is_empty)
+
+    if rpath not in defined_classes_path:
+        defined_classes_path[rpath] = {}
+    if namespace not in defined_classes_path[rpath]:
+        defined_classes_path[rpath][namespace] = set()
+    defined_classes_path[rpath][namespace].add(class_name)
 
     if is_empty:
         all_name = ''

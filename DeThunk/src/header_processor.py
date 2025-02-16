@@ -299,6 +299,17 @@ def process(path_to_file: str, args: Options):
                     is_modified = True
                     content = content.replace(decl, f'#include "{class_define.rpath}"\n')
                     continue
+        if args.add_trivial_dynamic_initializer:
+            path = path_to_file[path_to_file.find('src/') + 4 :]
+            if path in HeaderPreProcessor.defined_classes_path:
+                content += '\n// trivial initializers.'
+                for ns, classes in HeaderPreProcessor.defined_classes_path[path].items():
+                    for cl in classes:
+                        var_name = 'dummy__'
+                        if ns:
+                            var_name += ns.replace('::', '_')
+                        var_name += cl.replace('::', '_')
+                        content += f'\ninline {ns}::{cl} {var_name};'
         if is_modified:
             with open(path_to_file, 'w', encoding='utf-8') as wfile:
                 wfile.write(content)
