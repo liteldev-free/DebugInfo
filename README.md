@@ -54,7 +54,7 @@ xmake -v
 
 ## Be with us
 Our vision is to build an open and inclusive Minecraft: Bedrock Edition ecosystem.
- - https://t.me/bdsplugin
+ - [https://t.me/bdsplugins](https://t.me/s/bdsplugins)
 
 ## LICENSE
 All tools are open source under the MIT license.
