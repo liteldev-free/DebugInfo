@@ -116,11 +116,6 @@ def process(path_to_file: str, args: Options):
         ll_typed_regex = re.compile(r'TypedStorage<(\d+), (\d+), (.*?)> (\w+);')
         ll_untyped_regex = re.compile(r'UntypedStorage<(\d+), (\d+)> (\w+);')
 
-        def regex_preprocess_name(con: str):
-            # typed storage can be very complex, so we need to preprocess it.
-            # TODO: find a better way.
-            return re.sub(r'\s+', ' ', con).replace('< ', '<').replace(':: ', '::')
-
         # tmp
         content = ''
         for line in file.readlines():
@@ -179,7 +174,7 @@ def process(path_to_file: str, args: Options):
                 # ::ll::TypedStorage<Alignment, Size, T> mVar;
                 if 'TypedStorage' in stripped_line:
                     has_typed_storage = True
-                    matched = ll_typed_regex.search(regex_preprocess_name(stripped_line))
+                    matched = ll_typed_regex.search(StrUtil.flatten(stripped_line))
                     assert matched and matched.lastindex == 4, (
                         f'in {path_to_file}, line="{stripped_line}"'
                     )
@@ -250,7 +245,7 @@ def process(path_to_file: str, args: Options):
 
                 # ::ll::UntypedStorage<Alignment, Size>  mVar;
                 if 'UntypedStorage' in stripped_line:
-                    matched = ll_untyped_regex.search(regex_preprocess_name(stripped_line))
+                    matched = ll_untyped_regex.search(StrUtil.flatten(stripped_line))
                     assert matched and matched.lastindex == 3, (
                         f'in {path_to_file}, line="{stripped_line}"'
                     )
@@ -328,7 +323,7 @@ def process(path_to_file: str, args: Options):
                         check_pos = content.rfind(';')
                         if begin_pos > check_pos:
                             stripped_line = content[begin_pos:] + stripped_line
-                            stripped_line = regex_preprocess_name(stripped_line)
+                            stripped_line = StrUtil.flatten(stripped_line)
                     if f' {current_classes[-1][1]}(' in stripped_line:
                         if begin_pos:
                             content = content[:begin_pos]

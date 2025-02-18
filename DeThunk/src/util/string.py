@@ -39,3 +39,9 @@ def rfind_m(con: str, *args) -> int:
             r_pos = pos
             r_arg = arg
     return r_pos, r_arg
+
+
+def flatten(con: str):
+    # typed storage can be very complex, so we need to preprocess it.
+    # TODO: find a better way.
+    return re.sub(r'\s+', ' ', con).replace('< ', '<').replace(':: ', '::')
