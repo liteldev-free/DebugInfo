@@ -100,7 +100,7 @@ class not_null {
 // Bedrock::NotNullNonOwnerPtr
 namespace XBedrock {
 template <typename T>
-using NotNullNonOwnerPtr = xgsl::not_null<NonOwnerPointer<T>>;
+using NotNullNonOwnerPtr = xgsl::not_null<Bedrock::NonOwnerPointer<T>>;
 }
 // std::reference_wrapper
 namespace xstd {
