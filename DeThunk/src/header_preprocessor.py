@@ -8,7 +8,6 @@ defined_classes = dict()
 defined_classes_path = dict()
 empty_class_all_names = set()
 abstract_class_all_names = set()
-class_with_inheritance_all_names = set()
 
 
 class ClassDefine:

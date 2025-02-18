@@ -87,6 +87,29 @@ def process(path_to_file: str, args: Options):
     assert os.path.isfile(path_to_file)
 
     if path_to_file.endswith('_HeaderOutputPredefine.h'):
+        if args.add_trivial_dynamic_initializer:
+            with open(path_to_file, 'a', encoding='utf-8') as wfile:
+                wfile.write(r"""
+// gsl::not_null
+namespace xgsl {
+template <class T>
+class not_null {
+    T ptr_;
+};
+}
+// Bedrock::NotNullNonOwnerPtr
+namespace XBedrock {
+template <typename T>
+using NotNullNonOwnerPtr = xgsl::not_null<NonOwnerPointer<T>>;
+}
+// std::reference_wrapper
+namespace xstd {
+template <class _Ty>
+class reference_wrapper {
+    _Ty* _Ptr{};
+};
+}
+""")
         return
 
     RECORDED_THUNKS = []
@@ -237,6 +260,15 @@ def process(path_to_file: str, args: Options):
                             + type_name[ptr_id_pos + ptr_id_len :]
                         )
                         var_name = ''
+
+                    if args.add_trivial_dynamic_initializer:
+                        type_name = type_name.replace(
+                            '::std::reference_wrapper<', '::xstd::reference_wrapper<'
+                        )
+                        type_name = type_name.replace(
+                            '::Bedrock::NotNullNonOwnerPtr<', '::XBedrock::NotNullNonOwnerPtr<'
+                        )
+                        type_name = type_name.replace('::gsl::not_null<', '::xgsl::not_null<')
 
                     content += f'\t{type_name} {var_name};\n{security_check}'
 
