@@ -105,7 +105,7 @@ def process(path_to_file: str):
                         is_template,
                         is_empty,
                     )
-                    class_keyword_pos, _ = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+                    class_keyword_pos, _ = StrUtil.find_mb(line, 'class ', 'struct ', 'union ')
                     assert class_keyword_pos != -1, f"path = {path_to_file}, line = '{line}'"
 
                     if not is_empty:

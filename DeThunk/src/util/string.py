@@ -19,6 +19,20 @@ def endswith_m(con: str, *args) -> bool:
     return False
 
 
+def find_mb(con: str, *args) -> int:  # bounded
+    r_pos = -1
+    r_arg = None
+    for arg in args:
+        matched = re.search(rf'\b{re.escape(arg)}\b', con)
+        if not matched:
+            continue
+        pos = matched.start()
+        if pos != -1 and (r_pos == -1 or pos < r_pos):
+            r_pos = pos
+            r_arg = arg
+    return r_pos, r_arg
+
+
 def find_m(con: str, *args) -> int:
     r_pos = -1
     r_arg = None

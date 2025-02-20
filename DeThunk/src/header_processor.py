@@ -302,7 +302,7 @@ class reference_wrapper {
             if not in_forward_declaration_list:
                 founded_cl = CppUtil.find_class_definition(line)
                 if founded_cl:
-                    class_keyword_pos, _ = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+                    class_keyword_pos, _ = StrUtil.find_mb(line, 'class ', 'struct ', 'union ')
                     assert class_keyword_pos != -1, f"path = {path_to_file}, line = '{line}'"
 
                     if not stripped_line.endswith('{};'):

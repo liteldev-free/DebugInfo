@@ -18,7 +18,7 @@ def find_class_definition(line: str) -> str | None:
     # KEYWORD A {
     # KEYWORD A { ... }; (in single line)
 
-    keyword_pos, keyword = StrUtil.find_m(line, 'enum class ', 'class ', 'struct ', 'union ')
+    keyword_pos, keyword = StrUtil.find_mb(line, 'enum class ', 'class ', 'struct ', 'union ')
     if keyword_pos == -1 or keyword == 'enum class ':
         return None
 
@@ -67,7 +67,7 @@ def find_class_forward_declaration(line: str) -> ForwardDeclaration | None:
     if namespace_pos != -1 and left_brace_pos != -1:
         namespace_decl = line[namespace_pos + len('namespace') : left_brace_pos].strip()
 
-    keyword_pos, keyword = StrUtil.find_m(line, 'class ', 'struct ', 'union ')
+    keyword_pos, keyword = StrUtil.find_mb(line, 'class ', 'struct ', 'union ')
     if keyword_pos == -1:
         return None
 
