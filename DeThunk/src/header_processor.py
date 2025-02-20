@@ -87,29 +87,6 @@ def process(path_to_file: str, args: Options):
     assert os.path.isfile(path_to_file)
 
     if path_to_file.endswith('_HeaderOutputPredefine.h'):
-        if args.add_trivial_dynamic_initializer:
-            with open(path_to_file, 'a', encoding='utf-8') as wfile:
-                wfile.write(r"""
-// gsl::not_null
-namespace xgsl {
-template <class T>
-class not_null {
-    T ptr_;
-};
-}
-// Bedrock::NotNullNonOwnerPtr
-namespace XBedrock {
-template <typename T>
-using NotNullNonOwnerPtr = xgsl::not_null<Bedrock::NonOwnerPointer<T>>;
-}
-// std::reference_wrapper
-namespace xstd {
-template <class _Ty>
-class reference_wrapper {
-    _Ty* _Ptr{};
-};
-}
-""")
         return
 
     RECORDED_THUNKS = []
@@ -216,6 +193,15 @@ class reference_wrapper {
                                     or '::entt::basic_registry<' in type_name
                                     or '::Bedrock::Application::ThreadOwner<' in type_name
                                     or '::OwnerPtr<::EntityContext>' in type_name
+                                    or (
+                                        args.add_trivial_dynamic_initializer
+                                        and '::std::variant<' in type_name  # TODO: ...
+                                    )
+                                    or {
+                                        args.add_trivial_dynamic_initializer
+                                        and type_name  # unique_ptr with user deleter, TODO: ...
+                                        == '::std::unique_ptr<::RakNet::RakPeerInterface, void (*)(::RakNet::RakPeerInterface*)>'
+                                    }
                                 )
                             ):
                                 # print(f'erased: {type_name}')
@@ -260,15 +246,6 @@ class reference_wrapper {
                             + type_name[ptr_id_pos + ptr_id_len :]
                         )
                         var_name = ''
-
-                    if args.add_trivial_dynamic_initializer:
-                        type_name = type_name.replace(
-                            '::std::reference_wrapper<', '::xstd::reference_wrapper<'
-                        )
-                        type_name = type_name.replace(
-                            '::Bedrock::NotNullNonOwnerPtr<', '::XBedrock::NotNullNonOwnerPtr<'
-                        )
-                        type_name = type_name.replace('::gsl::not_null<', '::xgsl::not_null<')
 
                     content += f'\t{type_name} {var_name};\n{security_check}'
 
@@ -342,10 +319,7 @@ class reference_wrapper {
                         continue
                     else:
                         in_invalid_default_ctors = False
-                if (
-                    args.add_trivial_dynamic_initializer
-                    and '// prevent constructor by default' in line
-                ):
+                if '// prevent constructor by default' in line:
                     in_invalid_default_ctors = True
 
                 if current_classes and stripped_line.endswith(';'):
@@ -356,7 +330,11 @@ class reference_wrapper {
                         if begin_pos > check_pos:
                             stripped_line = content[begin_pos:] + stripped_line
                             stripped_line = StrUtil.flatten(stripped_line)
-                    if f' {current_classes[-1][1]}(' in stripped_line:
+                    class_name = current_classes[-1][1]
+                    if (
+                        f' {class_name}()' not in stripped_line
+                        and f' {class_name}(' in stripped_line
+                    ):
                         if begin_pos:
                             content = content[:begin_pos]
                         content += '\t// ' + stripped_line + '\n'
@@ -366,6 +344,9 @@ class reference_wrapper {
                 content += line
         if args.fix_includes_for_member_variables and has_typed_storage:
             for decl in forward_declarations:
+                if args.add_trivial_dynamic_initializer and 'CommandParameterData' in decl:
+                    # see CommandRegistry.h, to resolve circular reference.
+                    continue
                 class_define = try_translate_forward_declaration(decl, member_variable_types)
                 if class_define:
                     is_modified = True
@@ -374,9 +355,10 @@ class reference_wrapper {
         if args.add_trivial_dynamic_initializer:
             path = path_to_file[path_to_file.find('src/') + 4 :]
             if path in HeaderPreProcessor.defined_classes_path:
-                content += '\n// trivial initializers.'
                 for ns, classes in HeaderPreProcessor.defined_classes_path[path].items():
                     for cl in classes:
+                        if HeaderPreProcessor.defined_classes[ns][cl].is_template:
+                            continue
                         var_name = 'dummy__'
                         if ns:
                             var_name += ns.replace('::', '_') + '_'
@@ -385,8 +367,26 @@ class reference_wrapper {
                         if ns:
                             full_name += '::'
                         full_name += cl
-                        if full_name not in HeaderPreProcessor.abstract_class_all_names:
-                            content += f'\ninline {full_name} {var_name};'
+                        if full_name in [
+                            'Json::ValueIteratorBase',  # std::vector<T>::iterator
+                            'Json::ValueConstIterator',
+                            'Json::ValueIterator',
+                            'MemoryStream',  # std::istream
+                            'Bedrock::UniqueOwnerPointer',  # bug?
+                            'CommandRegistry::Overload',  # circular references
+                        ]:
+                            continue
+                        is_modified = True
+                        content += f'\ninline {full_name} {var_name};'
+            # rm pure virtual funcs.
+            is_modified = True
+            content = (
+                content.replace(' = 0;', ';')
+                .replace('::std::reference_wrapper<', '::x_std::reference_wrapper<')
+                .replace('::Bedrock::NotNullNonOwnerPtr<', '::x_Bedrock::NotNullNonOwnerPtr<')
+                .replace('::gsl::not_null<', '::x_gsl::not_null<')
+                .replace('::leveldb::EnvWrapper', '::x_leveldb::EnvWrapper')
+            )
         if is_modified:
             with open(path_to_file, 'w', encoding='utf-8') as wfile:
                 wfile.write(content)
