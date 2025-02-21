@@ -3,69 +3,10 @@ import re
 
 import header_preprocessor as HeaderPreProcessor
 
+from options import Options
+
 import util.cpp_language as CppUtil
 import util.string as StrUtil
-
-
-class Options:
-    base_dir = str()
-
-    # functions
-    remove_constructor_thunk = bool()
-    remove_destructor_thunk = bool()
-    remove_virtual_function_thunk = bool()
-
-    # variables
-    remove_virtual_table_pointer_thunk = bool()
-    restore_static_variable = bool()
-    restore_member_variable = bool()
-
-    # others
-    # * only takes effect for TypedStorage, since the TypedStorage wrapper makes the full type unnecessary.
-    fix_includes_for_member_variables = True
-    # * template definitions cannot be generated for headergen and may be wrong. class sizes may be wrong if
-    # * empty templates are used in TypedStorage.
-    # * this option will erase the type of the empty template (convert to uchar[size]).
-    fix_size_for_type_with_empty_template_class = True
-    # * this option will and add sizeof & alignof static assertions to members. (only takes effect for TypedStorage)
-    add_sizeof_alignof_static_assertions = True
-
-    # * some types of template definitions are not accurate.
-    erase_extra_invalid_types = True
-
-    # * in msvc, 'const' object must be initialized if not 'extern' (c2734)
-    # * see also https://reviews.llvm.org/D45978
-    fix_msvc_c2734 = True
-
-    # * try to initialize each class dynamically to ensure that the generated debug information is complete.
-    # * this will ENSURE that all classes have a default constructor.
-    add_trivial_dynamic_initializer = True
-
-    def __init__(self, args):
-        self.base_dir = args.path
-        self.remove_constructor_thunk = args.remove_constructor_thunk
-        self.remove_destructor_thunk = args.remove_destructor_thunk
-        self.remove_virtual_function_thunk = args.remove_virtual_function_thunk
-        self.remove_virtual_table_pointer_thunk = args.remove_virtual_table_pointer_thunk
-        self.restore_static_variable = args.restore_static_variable
-        self.restore_member_variable = args.restore_member_variable
-
-        if args.all:
-            self.set_all(True)
-
-    def set_function(self, opt: bool):
-        self.remove_constructor_thunk = opt
-        self.remove_destructor_thunk = opt
-        self.remove_virtual_function_thunk = opt
-
-    def set_variable(self, opt: bool):
-        self.remove_virtual_table_pointer_thunk = opt
-        self.restore_static_variable = opt
-        self.restore_member_variable = opt
-
-    def set_all(self, opt: bool):
-        self.set_function(opt)
-        self.set_variable(opt)
 
 
 def try_translate_forward_declaration(
@@ -184,7 +125,10 @@ def process(path_to_file: str, args: Options):
                     type_name = matched[3]
                     var_name = matched[4]
 
-                    if not StrUtil.endswith_m(type_name, '&', '*'):
+                    if (
+                        not StrUtil.endswith_m(type_name, '&', '*')
+                        and args.fix_size_for_type_with_empty_template_class
+                    ):
                         for empty_class in HeaderPreProcessor.empty_class_all_names:
                             if empty_class in type_name or (
                                 args.erase_extra_invalid_types
@@ -197,11 +141,11 @@ def process(path_to_file: str, args: Options):
                                         args.add_trivial_dynamic_initializer
                                         and '::std::variant<' in type_name  # TODO: ...
                                     )
-                                    or {
+                                    or (
                                         args.add_trivial_dynamic_initializer
                                         and type_name  # unique_ptr with user deleter, TODO: ...
                                         == '::std::unique_ptr<::RakNet::RakPeerInterface, void (*)(::RakNet::RakPeerInterface*)>'
-                                    }
+                                    )
                                 )
                             ):
                                 # print(f'erased: {type_name}')
@@ -367,14 +311,19 @@ def process(path_to_file: str, args: Options):
                         if ns:
                             full_name += '::'
                         full_name += cl
-                        if full_name in [
-                            'Json::ValueIteratorBase',  # std::vector<T>::iterator
-                            'Json::ValueConstIterator',
-                            'Json::ValueIterator',
-                            'MemoryStream',  # std::istream
-                            'Bedrock::UniqueOwnerPointer',  # bug?
-                            'CommandRegistry::Overload',  # circular references
-                        ]:
+                        if (
+                            full_name
+                            in [
+                                'Json::ValueIteratorBase',  # std::vector<T>::iterator
+                                'Json::ValueConstIterator',
+                                'Json::ValueIterator',
+                                'MemoryStream',  # std::istream
+                                'Core::FileStream',  # ::std::iostream
+                                'CommandRegistry::Overload',  # circular references
+                                'Bedrock::UniqueOwnerPointer',  # bug?
+                                'MovementDataExtractionUtility::StorageStorage::StorageTupleT',  # shit template
+                            ]
+                        ):
                             continue
                         is_modified = True
                         content += f'\ninline {full_name} {var_name};'
