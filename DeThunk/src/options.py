@@ -47,8 +47,8 @@ class Options:
         self.restore_static_variable = args.restore_static_variable
         self.restore_member_variable = args.restore_member_variable
 
-        if args.preset_extract_functions:
-            self.apply_preset_extract_functions()
+        if args.preset_extract_names:
+            self.apply_preset_extract_names()
 
         if args.preset_extract_types:
             self.apply_preset_extract_types()
@@ -73,7 +73,7 @@ class Options:
         self.set_function(opt)
         self.set_variable(opt)
 
-    def apply_preset_extract_functions(self):
+    def apply_preset_extract_names(self):
         self.remove_constructor_thunk = True
         self.remove_destructor_thunk = True
         self.remove_virtual_function_thunk = True
@@ -81,6 +81,7 @@ class Options:
         self.restore_static_variable = True
 
     def apply_preset_extract_types(self):
+        self.apply_preset_extract_names()
         self.restore_member_variable = True
 
     def judge_other_options(self):
