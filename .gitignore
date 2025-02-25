@@ -7,3 +7,7 @@ build
 
 # ClangD
 .cache
+
+# Python
+__pycache__
+.venv
