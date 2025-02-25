@@ -1,13 +1,13 @@
-# VSCode
+# vscode
 .vscode
 
-# XMake
+# c++/xmake
 .xmake
 build
 
-# ClangD
+# c++/clangd
 .cache
 
-# Python
+# python
 __pycache__
 .venv
