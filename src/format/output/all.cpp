@@ -6,7 +6,9 @@
 
 namespace format::output {
 
-void DefaultOutputFile::record_failure(std::string_view symbol) { m_failed_symbols.emplace(symbol); }
+void DefaultOutputFile::record_failure(std::string_view symbol) {
+    m_failed_symbols.emplace(symbol);
+}
 
 void DefaultOutputFile::save_failure(std::string_view path) const {
     std::ofstream ofs(path.data());

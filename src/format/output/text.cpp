@@ -2,7 +2,11 @@
 
 namespace format::output {
 
-void OutputTextFile::record(std::string_view symbol, uint64_t rva, bool is_function) {
+void OutputTextFile::record(
+    std::string_view symbol,
+    uint64_t         rva,
+    bool             is_function
+) {
     m_symbol_rva_map.try_emplace(std::string(symbol), rva);
 }
 

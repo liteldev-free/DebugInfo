@@ -10,8 +10,9 @@ class IOutputFile {
 public:
     virtual ~IOutputFile() = default;
 
-    virtual void record(std::string_view symbol, uint64_t rva, bool is_function) = 0;
-    virtual void save(std::string_view path) const                               = 0;
+    virtual void
+    record(std::string_view symbol, uint64_t rva, bool is_function) = 0;
+    virtual void save(std::string_view path) const                  = 0;
 
     virtual void record_failure(std::string_view symbol)   = 0;
     virtual void save_failure(std::string_view path) const = 0;

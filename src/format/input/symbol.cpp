@@ -2,7 +2,9 @@
 
 namespace format::input {
 
-SymbolListFile SymbolListFile::load(std::string_view path) { return load(std::vector<std::string>{path.data()}); }
+SymbolListFile SymbolListFile::load(std::string_view path) {
+    return load(std::vector<std::string>{path.data()});
+}
 
 SymbolListFile SymbolListFile::load(const std::vector<std::string>& paths) {
     SymbolListFile result;
@@ -20,7 +22,8 @@ SymbolListFile SymbolListFile::load(const std::vector<std::string>& paths) {
             auto separator_pos = line.find(", ");
             if (separator_pos == std::string::npos) {
                 throw std::runtime_error(
-                    "Symbol data is not included declType, please re-generate symlist file with -record-decl-name."
+                    "Symbol data is not included declType, please re-generate "
+                    "symlist file with -record-decl-name."
                 );
             }
 
@@ -30,7 +33,10 @@ SymbolListFile SymbolListFile::load(const std::vector<std::string>& paths) {
             result.m_data.emplace(symbol, DeclType(declType_s));
         }
 
-        std::println("Read {} symbols from dumped symlist.", result.m_data.size());
+        std::println(
+            "Read {} symbols from dumped symlist.",
+            result.m_data.size()
+        );
     }
 
     return result;

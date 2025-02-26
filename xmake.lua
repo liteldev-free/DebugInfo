@@ -13,8 +13,14 @@ option('symbol-resolver')
     set_showmenu(true)
     set_description('Select a symbol resolver.')
     set_values('builtin', 'native')
+option_end()
 
+-- the native symbol resolution backend is only available under windows, because liteldev has not 
+-- released a linux version.
 if is_config('symbol-resolver', 'native') then
+    if not is_plat('windows') then 
+        -- TODO: ERROR
+    end
     add_repositories('liteldev-repo https://github.com/LiteLDev/xmake-repo.git')
     add_requires('preloader 1.12.0')
 end
@@ -44,7 +50,7 @@ target('askrva')
 
     if is_config('symbol-resolver', 'native') then
         add_packages('preloader')
-        add_defines('DI_USE_NATIVE_SYMBOL_RESOLVER')
+        add_defines('DI_USE_NATIVE_SYMBOL_RESOLVER=1')
     end
 
 target('blob-extractor')

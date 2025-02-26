@@ -6,7 +6,8 @@ namespace format::output {
 
 class OutputMakePDBFile : public DefaultOutputFile {
 public:
-    void record(std::string_view symbol, uint64_t rva, bool is_function) override;
+    void
+    record(std::string_view symbol, uint64_t rva, bool is_function) override;
     void save(std::string_view path) const override;
 
 private:

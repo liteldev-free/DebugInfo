@@ -21,6 +21,8 @@ using namespace llvm;
 
 #include <type_traits>
 
+#include <bitset>
+
 // Helper
 
 #include "nonstd.h"

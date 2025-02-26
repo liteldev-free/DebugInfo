@@ -1,6 +1,6 @@
 #include "action/dump_symbol.h"
 
-#include "clang/Frontend/FrontendPluginRegistry.h"
+#include <clang/Frontend/FrontendPluginRegistry.h>
 
 using namespace clang;
 

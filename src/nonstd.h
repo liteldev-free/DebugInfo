@@ -1,5 +1,10 @@
 #pragma once
 
+template <typename To, typename From>
+constexpr auto static_unique_ptr_cast(std::unique_ptr<From>&& F) {
+    return std::unique_ptr<To>(static_cast<To*>(F.release()));
+}
+
 // From:
 // https://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
 
@@ -29,7 +34,9 @@ struct HashValueImpl {
 
 template <class Tuple>
 struct HashValueImpl<Tuple, 0> {
-    static void apply(size_t& seed, Tuple const& tuple) { hash_combine(seed, std::get<0>(tuple)); }
+    static void apply(size_t& seed, Tuple const& tuple) {
+        hash_combine(seed, std::get<0>(tuple));
+    }
 };
 
 } // namespace

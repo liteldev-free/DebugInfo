@@ -30,7 +30,9 @@ public:
 
     Enum data() const { return m_data; }
 
-    bool operator==(const DeclType& other) const { return m_data == other.m_data; }
+    bool operator==(const DeclType& other) const {
+        return m_data == other.m_data;
+    }
 
 private:
     Enum m_data;
@@ -40,7 +42,9 @@ struct Symbol {
     std::string m_name;
     DeclType    m_type;
 
-    bool operator==(const Symbol& other) const { return m_name == other.m_name; }
+    bool operator==(const Symbol& other) const {
+        return m_name == other.m_name;
+    }
 };
 
 } // namespace format::input
@@ -49,7 +53,9 @@ namespace std {
 
 template <>
 struct hash<format::input::Symbol> {
-    size_t operator()(const format::input::Symbol& symbol) const { return hash<string>{}(symbol.m_name); }
+    size_t operator()(const format::input::Symbol& symbol) const {
+        return hash<string>{}(symbol.m_name);
+    }
 };
 
 } // namespace std

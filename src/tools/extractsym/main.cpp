@@ -9,9 +9,6 @@
 
 #include <argparse/argparse.hpp>
 
-#include <fstream>
-#include <print>
-
 using namespace llvm;
 using namespace llvm::pdb;
 using namespace llvm::codeview;

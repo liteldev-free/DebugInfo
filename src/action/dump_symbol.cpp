@@ -1,12 +1,9 @@
 #include "action/dump_symbol.h"
 
-#include "clang/AST/ASTConsumer.h"
-#include "clang/AST/Mangle.h"
-#include "clang/AST/RecursiveASTVisitor.h"
-#include "clang/Frontend/CompilerInstance.h"
-
-#include <fstream>
-#include <unordered_set>
+#include <clang/AST/ASTConsumer.h>
+#include <clang/AST/Mangle.h>
+#include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Frontend/CompilerInstance.h>
 
 using namespace clang;
 

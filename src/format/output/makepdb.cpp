@@ -4,7 +4,11 @@
 
 namespace format::output {
 
-void OutputMakePDBFile::record(std::string_view symbol, uint64_t rva, bool is_function) {
+void OutputMakePDBFile::record(
+    std::string_view symbol,
+    uint64_t         rva,
+    bool             is_function
+) {
     m_records.emplace(std::string(symbol), rva, is_function);
 }
 

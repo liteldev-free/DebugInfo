@@ -5,7 +5,9 @@
 
 #include <argparse/argparse.hpp>
 
+#if DI_USE_NATIVE_SYMBOL_RESOLVER
 #include <pl/SymbolProvider.h>
+#endif
 
 using namespace format;
 
@@ -87,9 +89,20 @@ int main(int argc, char* argv[]) try {
 
     symlist.for_each([&output_file](const input::Symbol& symbol) {
         auto& sym = symbol.m_name;
-        auto  rva = pl::symbol_provider::pl_resolve_symbol_silent_n(sym.c_str(), sym.size());
+#if DI_USE_NATIVE_SYMBOL_RESOLVER
+        auto rva = pl::symbol_provider::pl_resolve_symbol_silent_n(
+            sym.c_str(),
+            sym.size()
+        );
+#else
+        auto rva = (void*)nullptr; // TODO
+#endif
         if (rva) {
-            output_file->record(symbol.m_name, reinterpret_cast<uint64_t>(rva), symbol.m_type.isFunction());
+            output_file->record(
+                symbol.m_name,
+                reinterpret_cast<uint64_t>(rva),
+                symbol.m_type.isFunction()
+            );
         } else {
             output_file->record_failure(symbol.m_name);
         }
