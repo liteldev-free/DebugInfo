@@ -34,9 +34,7 @@ end
 
 target('askrva')
     set_kind('binary')
-    add_files('src/askrva/**.cpp')
-    add_includedirs('src/askrva')
-    
+    add_files('src/tools/askrva/**.cpp')
     set_pcxxheader('src/pch.h')
 
     add_packages(
@@ -51,32 +49,35 @@ target('askrva')
 
 target('blob-extractor')
     set_kind('binary')
-    add_files('src/blob-extractor/**.cpp')
-    add_includedirs('src/blob-extractor')
+    add_files('src/tools/blob-extractor/**.cpp')
+    set_pcxxheader('src/pch.h')
 
 target('dumpsym')
     set_kind('shared')
-    add_files('src/dumpsym/**.cpp')
-    add_includedirs('src/dumpsym')
+    add_files('src/tools/dumpsym/**.cpp')
+    set_pcxxheader('src/pch.h')
     
-    add_packages('llvm')
+    add_packages(
+        'llvm'
+    )
 
 target('extractsym')
     set_kind('binary')
-    add_files('src/extractsym/**.cpp')
-    add_includedirs('src/extractsym')
+    add_files('src/tools/extractsym/**.cpp')
+    set_pcxxheader('src/pch.h')
 
     add_packages(
         'llvm',
         'argparse'
     )
 
-    add_links('LLVM')
+    if is_plat('linux') then -- workaround to fix link problem.
+        add_links('LLVM')
+    end
 
 target('makepdb')
     set_kind('binary')
-    add_files('src/makepdb/**.cpp')
-    add_includedirs('src/makepdb')
+    add_files('src/tools/makepdb/**.cpp')
     set_pcxxheader('src/pch.h')
 
     add_packages(
@@ -85,4 +86,6 @@ target('makepdb')
         'argparse'
     )
 
-    add_links('LLVM')
+    if is_plat('linux') then
+        add_links('LLVM')
+    end
