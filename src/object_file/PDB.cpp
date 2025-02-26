@@ -1,15 +1,15 @@
-#include "binary/PDB.h"
+#include "object_file/PDB.h"
 
-#include "llvm/DebugInfo/MSF/MSFBuilder.h"
-#include "llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h"
-#include "llvm/DebugInfo/PDB/Native/GSIStreamBuilder.h"
-#include "llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h"
-#include "llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h"
+#include <llvm/DebugInfo/MSF/MSFBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/GSIStreamBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/RawConstants.h>
+#include <llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h>
 
 using namespace llvm::pdb;
 
-namespace makepdb::binary {
+namespace di::object_file {
 
 PDB::PDB() : m_builder(m_allocator) {
     constexpr uint32_t block_size = 4096;
@@ -90,12 +90,12 @@ void PDB::build_TPI() {
     IPI.setVersionHeader(PdbRaw_TpiVer::PdbTpiV80);
 
     if (m_owning_raw_type_data) {
-        m_owning_raw_type_data->for_each<RawTypeData::TPI>(
+        m_owning_raw_type_data->for_each<data_format::RawTypeData::TPI>(
             [&TPI](codeview::TypeIndex index, const codeview::CVType& type) {
                 TPI.addTypeRecord(type.RecordData, std::nullopt);
             }
         );
-        m_owning_raw_type_data->for_each<RawTypeData::IPI>(
+        m_owning_raw_type_data->for_each<data_format::RawTypeData::IPI>(
             [&IPI](codeview::TypeIndex index, const codeview::CVType& type) {
                 IPI.addTypeRecord(type.RecordData, std::nullopt);
             }
@@ -105,24 +105,23 @@ void PDB::build_TPI() {
 
 void PDB::build_GSI() {
     std::vector<BulkPublic> publics;
-    m_owning_symbol_data->for_each([&publics,
-                                    this](const SymbolDataEntity& entity) {
+    m_owning_symbol_data->for_each([&publics, this](const BoundSymbol& entity) {
         BulkPublic symbol;
 
         auto section_index =
-            m_owning_coff->get_section_index(entity.rva - m_image_base);
+            m_owning_coff->get_section_index(entity.m_rva - m_image_base);
         auto section_or_err =
             m_owning_coff->get_owning_coff().getSection(section_index + 1);
         if (!section_or_err) {
             throw std::runtime_error("Invalid section.");
         }
 
-        symbol.Name    = strdup(entity.symbol_name.c_str());
-        symbol.NameLen = entity.symbol_name.size();
+        symbol.Name    = strdup(entity.m_symbol_name.c_str());
+        symbol.NameLen = entity.m_symbol_name.size();
         symbol.Segment = section_index + 1;
         symbol.Offset =
-            entity.rva - m_image_base - section_or_err.get()->VirtualAddress;
-        if (entity.is_function)
+            entity.m_rva - m_image_base - section_or_err.get()->VirtualAddress;
+        if (entity.m_is_function)
             symbol.setFlags(codeview::PublicSymFlags::Function);
 
         publics.emplace_back(symbol);
@@ -131,4 +130,4 @@ void PDB::build_GSI() {
     m_builder.getGsiBuilder().addPublicSymbols(std::move(publics));
 }
 
-} // namespace makepdb::binary
+} // namespace di::object_file

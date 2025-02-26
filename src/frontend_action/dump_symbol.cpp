@@ -1,4 +1,4 @@
-#include "action/dump_symbol.h"
+#include "frontend_action/dump_symbol.h"
 
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/Mangle.h>
@@ -9,62 +9,67 @@ using namespace clang;
 
 namespace {
 
-bool cfg_RecordDeclName = false;
+bool config_record_decl_name = false;
 
 class Container : private std::unordered_set<std::string> {
 public:
-    void Put(const std::string& Symbol) { emplace(Symbol); }
+    void put(const std::string& symbol) { emplace(symbol); }
 
-    void WriteTo(const std::string& Path) {
-        std::ofstream OFS(Path);
-        for (const auto& E : *this) {
-            OFS << E << "\n";
+    void write_to(const std::string& path) {
+        std::ofstream ofs(path);
+        if (ofs) {
+            for (const auto& E : *this) {
+                ofs << E << "\n";
+            }
         }
     }
 };
 
 class Visitor : public RecursiveASTVisitor<Visitor> {
 public:
-    Visitor(ASTContext& Context, Container& Container)
-    : ASTNameGen(Context),
-      Symbols(Container) {}
+    Visitor(ASTContext& context, Container& container)
+    : m_namegen(context),
+      m_symbol_container(container) {}
 
-    bool VisitNamedDecl(NamedDecl* ND) {
-        if (!ND || !ND->getDeclName()) return true;
+    bool VisitNamedDecl(NamedDecl* decl) {
+        if (!decl || !decl->getDeclName()) return true;
 
         // FIXME: There are likely other contexts in which it makes
         // no sense to ask for a mangled name.
-        if (isa<RequiresExprBodyDecl>(ND->getDeclContext())) return true;
+        if (isa<RequiresExprBodyDecl>(decl->getDeclContext())) return true;
 
         // If the declaration is dependent or is in a dependent
         // context, then the mangling is unlikely to be meaningful
         // (and in some cases may cause "don't know how to mangle
         // this" assertion failures.
-        if (ND->isTemplated()) return true;
+        if (decl->isTemplated()) return true;
 
         // Mangled names are not meaningful for locals, and may not
         // be well-defined in the case of VLAs.
-        auto* VD = dyn_cast<VarDecl>(ND);
-        if (VD && VD->hasLocalStorage()) return true;
+        auto* var_decl = dyn_cast<VarDecl>(decl);
+        if (var_decl && var_decl->hasLocalStorage()) return true;
 
         // Do not mangle template deduction guides.
-        if (isa<CXXDeductionGuideDecl>(ND)) return true;
+        if (isa<CXXDeductionGuideDecl>(decl)) return true;
 
-        std::string MangledName = ASTNameGen.getName(ND);
-        if (!MangledName.empty()) {
-            if (cfg_RecordDeclName) {
-                MangledName =
-                    std::format("{}, {}", ND->getDeclKindName(), MangledName);
+        std::string mangled_name = m_namegen.getName(decl);
+        if (!mangled_name.empty()) {
+            if (config_record_decl_name) {
+                mangled_name = std::format(
+                    "{}, {}",
+                    decl->getDeclKindName(),
+                    mangled_name
+                );
             }
-            Symbols.Put(MangledName);
+            m_symbol_container.put(mangled_name);
         }
 
         return true;
     }
 
 private:
-    ASTNameGenerator ASTNameGen;
-    Container&       Symbols;
+    ASTNameGenerator m_namegen;
+    Container&       m_symbol_container;
 };
 
 class Consumer : public ASTConsumer {
@@ -80,26 +85,28 @@ public:
         // Save
         auto& SM  = Context.getSourceManager();
         auto  Loc = SM.getLocForStartOfFile(SM.getMainFileID());
-        Symbols.WriteTo(SM.getFilename(Loc).str() + ".symbols");
+        Symbols.write_to(SM.getFilename(Loc).str() + ".symbols");
     }
 };
 
 } // namespace
 
+namespace di::frontend_action {
+
 std::unique_ptr<ASTConsumer> DumpSymbolFrontendAction::CreateASTConsumer(
-    CompilerInstance& CI,
+    CompilerInstance& instance,
     llvm::StringRef
 ) {
-    return std::make_unique<Consumer>(CI.getASTContext());
+    return std::make_unique<Consumer>(instance.getASTContext());
 }
 
 bool DumpSymbolFrontendAction::ParseArgs(
-    const CompilerInstance&         CI,
+    const CompilerInstance&,
     const std::vector<std::string>& args
 ) {
     for (const auto& arg : args) {
         if (arg.ends_with("record-decl-name")) {
-            cfg_RecordDeclName = true;
+            config_record_decl_name = true;
         }
     }
     return true;
@@ -108,3 +115,5 @@ bool DumpSymbolFrontendAction::ParseArgs(
 PluginASTAction::ActionType DumpSymbolFrontendAction::getActionType() {
     return AddAfterMainAction;
 }
+
+} // namespace di::frontend_action

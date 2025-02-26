@@ -1,13 +1,12 @@
 #pragma once
 
 #include <llvm/DebugInfo/CodeView/MergingTypeTableBuilder.h>
-#include <llvm/DebugInfo/CodeView/TypeStreamMerger.h>
 
-namespace makepdb {
+namespace di::data_format {
 
 class RawTypeData {
 public:
-    using ForEachTpiCallback =
+    using for_each_callback_t =
         std::function<void(codeview::TypeIndex, codeview::CVType)>;
 
     enum TypedStream { TPI, IPI };
@@ -15,7 +14,7 @@ public:
     explicit RawTypeData(std::string_view path);
 
     template <TypedStream Stream>
-    void for_each(const ForEachTpiCallback& callback) /*const*/ {
+    void for_each(const for_each_callback_t& callback) /*const*/ {
         if constexpr (Stream == TPI) {
             return m_storaged_TPI.ForEachRecord(callback);
         }
@@ -31,4 +30,4 @@ private:
     codeview::MergingTypeTableBuilder m_storaged_IPI;
 };
 
-} // namespace makepdb
+} // namespace di::data_format

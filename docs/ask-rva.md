@@ -18,7 +18,7 @@ known as magicblob), PreLoader no longer handles PDB. The source code in the cur
 
 ### Usage
 
-- --output-format can be `auto` / `txt` / `fakepdb` / `makepdb`
+- --output-format can be `auto` / `txt` / `makepdb`
 
 ```
 Usage: askrva [--help] [--version] --output VAR [--output-failed VAR] [--output-format VAR] path

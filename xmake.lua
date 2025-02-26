@@ -3,6 +3,7 @@ add_rules('mode.debug', 'mode.release')
 add_requires('argparse      3.1')
 add_requires('nlohmann_json 3.11.3')
 add_requires('xxhash        0.8.3')
+add_requires('boost         1.87.0')
 
 add_requires('llvm')
 

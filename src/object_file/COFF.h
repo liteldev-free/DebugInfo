@@ -2,7 +2,7 @@
 
 #include <llvm/Object/COFF.h>
 
-namespace makepdb::binary {
+namespace di::object_file {
 
 class COFF {
 public:
@@ -20,4 +20,4 @@ private:
     object::OwningBinary<object::COFFObjectFile> m_owning_binary;
 };
 
-} // namespace makepdb::binary
+} // namespace di::object_file

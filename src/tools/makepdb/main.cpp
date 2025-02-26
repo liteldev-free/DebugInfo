@@ -1,12 +1,12 @@
 #include <argparse/argparse.hpp>
 
-#include "binary/COFF.h"
-#include "binary/PDB.h"
+#include "object_file/COFF.h"
+#include "object_file/PDB.h"
 
-#include "raw_type_data.h"
-#include "symbol_data.h"
+#include "data_format/bound_symbol_list.h"
+#include "data_format/raw_type_data.h"
 
-using namespace makepdb;
+using namespace di;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
 
@@ -53,16 +53,18 @@ int main(int argc, char* argv[]) try {
     auto args = load_args(argc, argv);
 
     auto server_program =
-        std::make_unique<binary::COFF>(args.server_program_path);
+        std::make_unique<object_file::COFF>(args.server_program_path);
 
-    auto symbol_data = std::make_unique<SymbolData>(args.symbol_data_path);
+    auto symbol_data =
+        std::make_unique<data_format::BoundSymbolList>(args.symbol_data_path);
 
-    std::unique_ptr<RawTypeData> raw_type_data;
+    std::unique_ptr<data_format::RawTypeData> raw_type_data;
     if (args.typeinfo_pdb_path) {
-        raw_type_data = std::make_unique<RawTypeData>(*args.typeinfo_pdb_path);
+        raw_type_data =
+            std::make_unique<data_format::RawTypeData>(*args.typeinfo_pdb_path);
     }
 
-    binary::PDB pdb;
+    object_file::PDB pdb;
     pdb.set_coff_object(std::move(server_program));
     pdb.set_symbol_data(std::move(symbol_data));
     pdb.set_raw_type_data(std::move(raw_type_data));

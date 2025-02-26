@@ -1,6 +1,6 @@
-#include "binary/COFF.h"
+#include "object_file/COFF.h"
 
-namespace makepdb::binary {
+namespace di::object_file {
 
 COFF::COFF(std::string_view path) {
     using namespace object;
@@ -67,4 +67,4 @@ object::COFFObjectFile const& COFF::get_owning_coff() const {
     return *m_owning_binary.getBinary();
 }
 
-} // namespace makepdb::binary
+} // namespace di::object_file

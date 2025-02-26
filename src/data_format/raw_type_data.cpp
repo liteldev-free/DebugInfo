@@ -1,5 +1,6 @@
-#include "raw_type_data.h"
+#include "data_format/raw_type_data.h"
 
+#include <llvm/DebugInfo/CodeView/TypeStreamMerger.h>
 #include <llvm/DebugInfo/PDB/IPDBSession.h>
 #include <llvm/DebugInfo/PDB/Native/NativeSession.h>
 #include <llvm/DebugInfo/PDB/Native/PDBFile.h>
@@ -9,7 +10,7 @@
 
 using namespace llvm::pdb;
 
-namespace makepdb {
+namespace di::data_format {
 
 RawTypeData::RawTypeData(std::string_view path)
 : m_storaged_TPI(m_allocator),
@@ -51,4 +52,4 @@ RawTypeData::RawTypeData(std::string_view path)
     }
 }
 
-} // namespace makepdb
+} // namespace di::data_format

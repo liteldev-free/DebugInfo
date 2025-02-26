@@ -1,14 +1,8 @@
-#include "format/input/symbol.h"
+#include "data_format/typed_symbol_list.h"
 
-namespace format::input {
+namespace di::data_format {
 
-SymbolListFile SymbolListFile::load(std::string_view path) {
-    return load(std::vector<std::string>{path.data()});
-}
-
-SymbolListFile SymbolListFile::load(const std::vector<std::string>& paths) {
-    SymbolListFile result;
-
+TypedSymbolList::TypedSymbolList(const std::vector<std::string_view>& paths) {
     for (const auto& path : paths) {
         std::ifstream ifs(path.data());
         if (!ifs) {
@@ -30,20 +24,11 @@ SymbolListFile SymbolListFile::load(const std::vector<std::string>& paths) {
             auto declType_s = line.substr(0, separator_pos);
             auto symbol     = line.substr(separator_pos + 2);
 
-            result.m_data.emplace(symbol, DeclType(declType_s));
+            m_data.emplace(symbol, DeclType(declType_s));
         }
 
-        std::println(
-            "Read {} symbols from dumped symlist.",
-            result.m_data.size()
-        );
+        std::println("Read {} symbols from dumped symlist.", m_data.size());
     }
-
-    return result;
 }
 
-void SymbolListFile::for_each(const std::function<void(Symbol)>& callback) {
-    for (const auto& entity : m_data) callback(entity);
-}
-
-} // namespace format::input
+} // namespace di::data_format

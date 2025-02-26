@@ -1,7 +1,6 @@
-#include "format/input/all.h" // IWYU pragma: keep
-#include "format/output/all.h"
-
 #include "util/string.h"
+
+#include "data_format/typed_symbol_list.h"
 
 #include <argparse/argparse.hpp>
 
@@ -9,16 +8,18 @@
 #include <pl/SymbolProvider.h>
 #endif
 
-using namespace format;
-
 constexpr auto VERSION = "1.0.0";
+
+enum class OutputFormat { Text, MakePDB };
+
+using namespace di;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("askrva", VERSION);
 
     struct {
         OutputFormat             m_output_format;
-        std::vector<std::string> m_input_path;
+        std::vector<std::string> m_input_paths;
         std::string              m_output_path;
 
         std::optional<std::string> m_output_failed_path;
@@ -30,7 +31,7 @@ constexpr auto VERSION = "1.0.0";
 
     program.add_argument("path")
         .help("Path to the symbol list file.")
-        .store_into(args.m_input_path)
+        .store_into(args.m_input_paths)
         .nargs(argparse::nargs_pattern::at_least_one)
         .required();
     
@@ -44,7 +45,7 @@ constexpr auto VERSION = "1.0.0";
 
     program.add_argument("--output-format")
         .help("Specify output format.")
-        .choices("auto", "text", "fakepdb", "makepdb")
+        .choices("auto", "text", "makepdb")
         .default_value("auto")
         .store_into(output_format);
 
@@ -58,8 +59,6 @@ constexpr auto VERSION = "1.0.0";
         switch (H(output_format)) {
         case H("text"):
             return OutputFormat::Text;
-        case H("fakepdb"):
-            return OutputFormat::FakePDB;
         case H("makepdb"):
             return OutputFormat::MakePDB;
         case H("auto"):
@@ -83,11 +82,11 @@ constexpr auto VERSION = "1.0.0";
 int main(int argc, char* argv[]) try {
 
     auto args    = load_args(argc, argv);
-    auto symlist = input::SymbolListFile::load(args.m_input_path);
+    auto symlist = data_format::TypedSymbolList(args.m_input_paths);
 
-    auto output_file = output::create(args.m_output_format);
+    auto output_file = (args.m_output_format);
 
-    symlist.for_each([&output_file](const input::Symbol& symbol) {
+    symlist.for_each([&output_file](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
         auto rva = pl::symbol_provider::pl_resolve_symbol_silent_n(
@@ -101,7 +100,7 @@ int main(int argc, char* argv[]) try {
             output_file->record(
                 symbol.m_name,
                 reinterpret_cast<uint64_t>(rva),
-                symbol.m_type.isFunction()
+                symbol.m_type.is_function()
             );
         } else {
             output_file->record_failure(symbol.m_name);
