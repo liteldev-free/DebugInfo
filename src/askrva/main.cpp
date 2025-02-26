@@ -1,4 +1,4 @@
-#include "format/input/all.h"
+#include "format/input/all.h" // IWYU pragma: keep
 #include "format/output/all.h"
 
 #include "util/string.h"
