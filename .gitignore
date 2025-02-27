@@ -1,0 +1,14 @@
+# vscode
+.vscode
+
+# c++/xmake
+.xmake
+build
+
+# c++/clangd
+.cache
+.clangd 
+
+# python
+__pycache__
+.venv
