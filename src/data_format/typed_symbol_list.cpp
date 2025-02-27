@@ -2,7 +2,7 @@
 
 namespace di::data_format {
 
-TypedSymbolList::TypedSymbolList(const std::vector<std::string_view>& paths) {
+TypedSymbolList::TypedSymbolList(const std::vector<std::string>& paths) {
     for (const auto& path : paths) {
         std::ifstream ifs(path.data());
         if (!ifs) {

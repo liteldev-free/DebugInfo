@@ -10,7 +10,7 @@ using namespace di;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
 
-    argparse::ArgumentParser program("makepdb", "1.1.0");
+    argparse::ArgumentParser program("makepdb");
 
     struct {
         std::string server_program_path;

@@ -14,14 +14,16 @@ option('symbol-resolver')
     set_showmenu(true)
     set_description('Select a symbol resolver.')
     set_values('builtin', 'native')
+    before_check(function (option)
+        -- the native symbol resolution backend is only available under windows, because liteldev
+        -- has not released a linux version.
+        if option:value() == 'native' and not is_plat('windows') then 
+            raise('the native symbol resolver does not support this platform.')
+        end
+    end)
 option_end()
 
--- the native symbol resolution backend is only available under windows, because liteldev has not 
--- released a linux version.
 if is_config('symbol-resolver', 'native') then
-    if not is_plat('windows') then 
-        -- TODO: ERROR
-    end
     add_repositories('liteldev-repo https://github.com/LiteLDev/xmake-repo.git')
     add_requires('preloader 1.12.0')
 end
@@ -33,14 +35,30 @@ set_warnings('all')
 
 add_includedirs('src')
 
+set_policy("build.optimization.lto", true)
+
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
 end
 
 --- targets
 
+target('libdi')
+    set_kind('static')
+    add_files('src/**.cpp')
+    set_pcxxheader('src/pch.h')
+    
+    set_basename('di')
+
+    add_packages(
+        'nlohmann_json'
+    )
+
+    remove_files('src/tools/**')
+
 target('askrva')
     set_kind('binary')
+    add_deps('libdi')
     add_files('src/tools/askrva/**.cpp')
     set_pcxxheader('src/pch.h')
 
@@ -56,11 +74,13 @@ target('askrva')
 
 target('blob-extractor')
     set_kind('binary')
+    add_deps('libdi')
     add_files('src/tools/blob-extractor/**.cpp')
     set_pcxxheader('src/pch.h')
 
 target('dumpsym')
     set_kind('shared')
+    add_deps('libdi')
     add_files('src/tools/dumpsym/**.cpp')
     set_pcxxheader('src/pch.h')
     
@@ -70,6 +90,7 @@ target('dumpsym')
 
 target('extractsym')
     set_kind('binary')
+    add_deps('libdi')
     add_files('src/tools/extractsym/**.cpp')
     set_pcxxheader('src/pch.h')
 
@@ -84,6 +105,7 @@ target('extractsym')
 
 target('makepdb')
     set_kind('binary')
+    add_deps('libdi')
     add_files('src/tools/makepdb/**.cpp')
     set_pcxxheader('src/pch.h')
 

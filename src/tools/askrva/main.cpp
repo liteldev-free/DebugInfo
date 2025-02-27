@@ -1,5 +1,8 @@
 #include "util/string.h"
 
+#include "data_format/bound_symbol_list.h"
+#include "data_format/human_readable_symbol_list.h"
+#include "data_format/raw_text.h"
 #include "data_format/typed_symbol_list.h"
 
 #include <argparse/argparse.hpp>
@@ -8,14 +11,12 @@
 #include <pl/SymbolProvider.h>
 #endif
 
-constexpr auto VERSION = "1.0.0";
-
 enum class OutputFormat { Text, MakePDB };
 
 using namespace di;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
-    argparse::ArgumentParser program("askrva", VERSION);
+    argparse::ArgumentParser program("askrva");
 
     struct {
         OutputFormat             m_output_format;
@@ -84,9 +85,11 @@ int main(int argc, char* argv[]) try {
     auto args    = load_args(argc, argv);
     auto symlist = data_format::TypedSymbolList(args.m_input_paths);
 
-    auto output_file = (args.m_output_format);
+    data_format::BoundSymbolList         bound_symbol_list;
+    data_format::HumanReadableSymbolList human_readable_symbol_list;
+    data_format::RawText                 raw_text;
 
-    symlist.for_each([&output_file](const TypedSymbol& symbol) {
+    symlist.for_each([&](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
         auto rva = pl::symbol_provider::pl_resolve_symbol_silent_n(
@@ -97,19 +100,19 @@ int main(int argc, char* argv[]) try {
         auto rva = (void*)nullptr; // TODO
 #endif
         if (rva) {
-            output_file->record(
+            bound_symbol_list.record(
                 symbol.m_name,
                 reinterpret_cast<uint64_t>(rva),
                 symbol.m_type.is_function()
             );
         } else {
-            output_file->record_failure(symbol.m_name);
+            raw_text.record(symbol.m_name);
         }
     });
 
-    output_file->save(args.m_output_path);
+    bound_symbol_list.write_to(args.m_output_path);
     if (args.m_output_failed_path) {
-        output_file->save_failure(*args.m_output_failed_path);
+        raw_text.write_to(*args.m_output_failed_path);
     }
 
     std::println("Everything is OK.");
