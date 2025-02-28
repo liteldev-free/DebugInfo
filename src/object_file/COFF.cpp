@@ -2,10 +2,10 @@
 
 namespace di::object_file {
 
-COFF::COFF(std::string_view path) {
+COFF::COFF(const std::filesystem::path& path) {
     using namespace object;
 
-    auto obj_or_err = ObjectFile::createObjectFile(path);
+    auto obj_or_err = ObjectFile::createObjectFile(path.string());
     if (!obj_or_err) {
         throw std::runtime_error("Failed to create object file.");
     }

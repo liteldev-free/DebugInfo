@@ -6,8 +6,8 @@ namespace di::data_format {
 
 constexpr int BOUND_SYMBOL_LIST_FORMAT_VERSION = 1;
 
-BoundSymbolList::BoundSymbolList(std::string_view path) {
-    std::ifstream ifs(path.data());
+void BoundSymbolList::read(const std::filesystem::path& path) {
+    std::ifstream ifs(path);
     if (!ifs) {
         throw std::runtime_error("Failed to open data path.");
     }
@@ -17,6 +17,7 @@ BoundSymbolList::BoundSymbolList(std::string_view path) {
         throw std::runtime_error("Unsupported data version.");
     }
 
+    m_entities.clear();
     for (const auto& entity : data["data"]) {
         m_entities.emplace(
             BoundSymbol{entity["symbol"], entity["rva"], entity["is_function"]}
@@ -24,15 +25,7 @@ BoundSymbolList::BoundSymbolList(std::string_view path) {
     }
 }
 
-void BoundSymbolList::record(
-    std::string_view symbol,
-    uint64_t         rva,
-    bool             is_function
-) {
-    m_entities.emplace(BoundSymbol{std::string(symbol), rva, is_function});
-}
-
-void BoundSymbolList::write_to(const std::string& path) const {
+void BoundSymbolList::write(const std::filesystem::path& path) const {
     std::ofstream ofs(path);
     if (!ofs) {
         throw std::runtime_error("Failed to open file!");
@@ -50,6 +43,14 @@ void BoundSymbolList::write_to(const std::string& path) const {
     }
 
     ofs << data.dump(4);
+}
+
+void BoundSymbolList::record(
+    std::string_view symbol,
+    uint64_t         rva,
+    bool             is_function
+) {
+    m_entities.emplace(BoundSymbol{std::string(symbol), rva, is_function});
 }
 
 } // namespace di::data_format

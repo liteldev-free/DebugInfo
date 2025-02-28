@@ -30,7 +30,7 @@ public:
         m_owning_raw_type_data = std::move(raw_type_data);
     }
 
-    void write(std::string_view path);
+    void write(const std::filesystem::path& path);
 
 private:
     void build();

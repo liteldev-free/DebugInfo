@@ -55,13 +55,13 @@ int main(int argc, char* argv[]) try {
     auto server_program =
         std::make_unique<object_file::COFF>(args.server_program_path);
 
-    auto symbol_data =
-        std::make_unique<data_format::BoundSymbolList>(args.symbol_data_path);
+    auto symbol_data = std::make_unique<data_format::BoundSymbolList>();
+    symbol_data->read(args.symbol_data_path);
 
     std::unique_ptr<data_format::RawTypeData> raw_type_data;
     if (args.typeinfo_pdb_path) {
-        raw_type_data =
-            std::make_unique<data_format::RawTypeData>(*args.typeinfo_pdb_path);
+        raw_type_data = std::make_unique<data_format::RawTypeData>();
+        raw_type_data->read(*args.typeinfo_pdb_path);
     }
 
     object_file::PDB pdb;

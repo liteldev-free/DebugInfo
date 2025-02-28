@@ -6,7 +6,7 @@ namespace di::object_file {
 
 class COFF {
 public:
-    explicit COFF(std::string_view path);
+    explicit COFF(const std::filesystem::path& path);
 
     codeview::PDB70DebugInfo get_debug_info() const;
 

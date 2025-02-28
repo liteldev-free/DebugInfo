@@ -64,6 +64,35 @@ public:
 
     constexpr Enum data() const { return m_data; }
 
+    constexpr std::string string() const {
+        using namespace util::string;
+
+        // clang-format off
+
+        switch (m_data) {
+    #define HSTR(x)                                                                \
+        case x:                                                                    \
+            return #x;
+        HSTR(Function);
+        HSTR(CXXDeductionGuide);
+        HSTR(CXXMethod);
+        HSTR(CXXConstructor);
+        HSTR(CXXConversion);
+        HSTR(CXXDestructor);
+        HSTR(Var);
+        HSTR(Decomposition);
+        HSTR(ImplicitParam);
+        HSTR(OMPCapturedExpr);
+        HSTR(ParamVar);
+        HSTR(VarTemplateSpecialization);
+    #undef HSTR
+        default:
+            throw std::runtime_error("Unexpected decl type.");
+        }
+
+        // clang-format on
+    }
+
     constexpr bool operator==(const DeclType& other) const {
         return m_data == other.m_data;
     }

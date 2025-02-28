@@ -1,17 +1,24 @@
 #pragma once
 
+#include "data_format/io_base.h"
+
 #include <llvm/DebugInfo/CodeView/MergingTypeTableBuilder.h>
 
 namespace di::data_format {
 
-class RawTypeData {
+class RawTypeData : public IOBase {
 public:
     using for_each_callback_t =
         std::function<void(codeview::TypeIndex, codeview::CVType)>;
 
     enum TypedStream { TPI, IPI };
 
-    explicit RawTypeData(std::string_view path);
+    RawTypeData() : m_storaged_IPI(m_allocator), m_storaged_TPI(m_allocator) {}
+
+    void read(const std::filesystem::path& path) override;
+    void write(const std::filesystem::path& path) const override {
+        throw std::runtime_error("Unsupported operation.");
+    }
 
     template <TypedStream Stream>
     void for_each(const for_each_callback_t& callback) /*const*/ {
@@ -26,8 +33,8 @@ public:
 private:
     BumpPtrAllocator m_allocator;
 
-    codeview::MergingTypeTableBuilder m_storaged_TPI;
     codeview::MergingTypeTableBuilder m_storaged_IPI;
+    codeview::MergingTypeTableBuilder m_storaged_TPI;
 };
 
 } // namespace di::data_format

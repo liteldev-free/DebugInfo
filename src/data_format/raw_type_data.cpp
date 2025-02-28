@@ -12,11 +12,13 @@ using namespace llvm::pdb;
 
 namespace di::data_format {
 
-RawTypeData::RawTypeData(std::string_view path)
-: m_storaged_TPI(m_allocator),
-  m_storaged_IPI(m_allocator) {
+void RawTypeData::read(const std::filesystem::path& path) {
     std::unique_ptr<IPDBSession> pdb_session;
-    if (llvm::pdb::loadDataForPDB(PDB_ReaderType::Native, path, pdb_session)) {
+    if (llvm::pdb::loadDataForPDB(
+            PDB_ReaderType::Native,
+            path.string(),
+            pdb_session
+        )) {
         throw std::runtime_error("Failed to load PDB.");
     }
 

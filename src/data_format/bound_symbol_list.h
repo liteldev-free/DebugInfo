@@ -1,18 +1,18 @@
 #pragma once
 
+#include "data_format/io_base.h"
 #include "data_format/type/bound_symbol.h"
 
 namespace di::data_format {
 
-class BoundSymbolList {
+class BoundSymbolList : public IOBase {
 public:
     using for_each_callback_t = std::function<void(BoundSymbol const&)>;
 
-    explicit BoundSymbolList() = default;
-    explicit BoundSymbolList(std::string_view path);
+    void read(const std::filesystem::path& path) override;
+    void write(const std::filesystem::path& path) const override;
 
     void record(std::string_view symbol, uint64_t rva, bool is_function);
-    void write_to(const std::string& path) const;
 
     constexpr void for_each(const for_each_callback_t& callback) const {
         for (const auto& entity : m_entities) callback(entity);

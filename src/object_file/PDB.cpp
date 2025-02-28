@@ -24,11 +24,11 @@ PDB::PDB() : m_builder(m_allocator) {
     }
 }
 
-void PDB::write(std::string_view path) {
+void PDB::write(const std::filesystem::path& path) {
     build();
 
-    auto guid = m_builder.getInfoBuilder().getGuid();
-    if (m_builder.commit(path, &guid)) {
+    codeview::GUID out_guid;
+    if (m_builder.commit(path.string(), &out_guid)) {
         throw std::runtime_error("Failed to create pdb!");
     }
 }

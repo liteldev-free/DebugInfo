@@ -2,33 +2,40 @@
 
 namespace di::data_format {
 
-TypedSymbolList::TypedSymbolList(const std::vector<std::string>& paths) {
-    for (const auto& path : paths) {
-        std::ifstream ifs(path.data());
-        if (!ifs) {
-            throw std::runtime_error("Failed to open symlist file.");
-        }
-
-        std::string line;
-        while (std::getline(ifs, line)) {
-            if (line.empty()) continue;
-
-            auto separator_pos = line.find(", ");
-            if (separator_pos == std::string::npos) {
-                throw std::runtime_error(
-                    "Symbol data is not included declType, please re-generate "
-                    "symlist file with -record-decl-name."
-                );
-            }
-
-            auto declType_s = line.substr(0, separator_pos);
-            auto symbol     = line.substr(separator_pos + 2);
-
-            m_data.emplace(symbol, DeclType(declType_s));
-        }
-
-        std::println("Read {} symbols from dumped symlist.", m_data.size());
+void TypedSymbolList::read(const std::filesystem::path& path) {
+    std::ifstream ifs(path);
+    if (!ifs) {
+        throw std::runtime_error("Failed to open symlist file.");
     }
+
+    std::string line;
+    while (std::getline(ifs, line)) {
+        if (line.empty()) continue;
+
+        auto sep_pos = line.find(", ");
+        if (sep_pos == std::string::npos) {
+            throw std::runtime_error(
+                "Symbol data is not included declType, please re-generate "
+                "symlist file with -record-decl-name."
+            );
+        }
+
+        auto decl_type_s = line.substr(0, sep_pos);
+        auto symbol      = line.substr(sep_pos + 2);
+
+        m_data.emplace(symbol, DeclType(decl_type_s));
+    }
+}
+
+void TypedSymbolList::write(const std::filesystem::path& path) const {
+    std::ofstream ofs;
+    for (const auto& [symbol, decl_type] : m_data) {
+        ofs << symbol << ", " << decl_type.string() << "\n";
+    }
+}
+
+void TypedSymbolList::record(std::string_view symbol, DeclType type) {
+    m_data.emplace(symbol, type);
 }
 
 } // namespace di::data_format

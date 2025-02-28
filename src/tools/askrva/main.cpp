@@ -1,7 +1,4 @@
-#include "util/string.h"
-
 #include "data_format/bound_symbol_list.h"
-#include "data_format/human_readable_symbol_list.h"
 #include "data_format/raw_text.h"
 #include "data_format/typed_symbol_list.h"
 
@@ -11,15 +8,12 @@
 #include <pl/SymbolProvider.h>
 #endif
 
-enum class OutputFormat { Text, MakePDB };
-
 using namespace di;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("askrva");
 
     struct {
-        OutputFormat             m_output_format;
         std::vector<std::string> m_input_paths;
         std::string              m_output_path;
 
@@ -54,25 +48,6 @@ using namespace di;
 
     program.parse_args(argc, argv);
 
-    args.m_output_format = [&output_format, &args]() -> OutputFormat {
-        using namespace util::string;
-
-        switch (H(output_format)) {
-        case H("text"):
-            return OutputFormat::Text;
-        case H("makepdb"):
-            return OutputFormat::MakePDB;
-        case H("auto"):
-        default: {
-            if (args.m_output_path.ends_with(".json")) {
-                return OutputFormat::MakePDB;
-            } else {
-                return OutputFormat::Text;
-            }
-        }
-        }
-    }();
-
     if (program.is_used("--output-failed")) {
         args.m_output_failed_path = program.get<std::string>("--output-failed");
     }
@@ -83,11 +58,10 @@ using namespace di;
 int main(int argc, char* argv[]) try {
 
     auto args    = load_args(argc, argv);
-    auto symlist = data_format::TypedSymbolList(args.m_input_paths);
+    auto symlist = data_format::TypedSymbolList();
 
-    data_format::BoundSymbolList         bound_symbol_list;
-    data_format::HumanReadableSymbolList human_readable_symbol_list;
-    data_format::RawText                 raw_text;
+    data_format::BoundSymbolList bound_symbol_list;
+    data_format::RawText         raw_text;
 
     symlist.for_each([&](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
@@ -110,9 +84,9 @@ int main(int argc, char* argv[]) try {
         }
     });
 
-    bound_symbol_list.write_to(args.m_output_path);
+    bound_symbol_list.write(args.m_output_path);
     if (args.m_output_failed_path) {
-        raw_text.write_to(*args.m_output_failed_path);
+        raw_text.write(*args.m_output_failed_path);
     }
 
     std::println("Everything is OK.");

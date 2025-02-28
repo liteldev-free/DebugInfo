@@ -2,18 +2,26 @@
 
 namespace di::data_format {
 
-void RawText::record(std::string_view content) {
-    m_data += content;
-    m_data += '\n';
+void RawText::read(const std::filesystem::path& path) {
+    std::ifstream ifs(path);
+
+    auto size = std::filesystem::file_size(path);
+    m_data.reserve(size);
+    m_data.assign(std::istreambuf_iterator<char>(ifs), {});
 }
 
-void RawText::write_to(std::string_view path) const {
-    std::ofstream ofs(path.data());
+void RawText::write(const std::filesystem::path& path) const {
+    std::ofstream ofs(path);
     if (!ofs) {
         throw std::runtime_error("Failed to open save file.");
     }
 
     ofs << m_data;
+}
+
+void RawText::record(std::string_view content) {
+    m_data += content;
+    m_data += '\n';
 }
 
 } // namespace di::data_format
