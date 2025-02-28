@@ -16,7 +16,7 @@ public:
     void read(const std::filesystem::path& path) override;
     void write(const std::filesystem::path& path) const override;
 
-    void record(std::string_view name, DeclType type);
+    void record(const std::string& symbol, DeclType type);
 
     constexpr void for_each(const for_each_callback_t& callback) const {
         for (const auto& entity : m_data) callback(entity);

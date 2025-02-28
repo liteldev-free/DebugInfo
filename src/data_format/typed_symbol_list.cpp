@@ -28,13 +28,13 @@ void TypedSymbolList::read(const std::filesystem::path& path) {
 }
 
 void TypedSymbolList::write(const std::filesystem::path& path) const {
-    std::ofstream ofs;
+    std::ofstream ofs(path);
     for (const auto& [symbol, decl_type] : m_data) {
         ofs << symbol << ", " << decl_type.string() << "\n";
     }
 }
 
-void TypedSymbolList::record(std::string_view symbol, DeclType type) {
+void TypedSymbolList::record(const std::string& symbol, DeclType type) {
     m_data.emplace(symbol, type);
 }
 
