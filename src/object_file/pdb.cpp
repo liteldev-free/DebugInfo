@@ -1,4 +1,4 @@
-#include "object_file/PDB.h"
+#include "object_file/pdb.h"
 
 #include <llvm/DebugInfo/MSF/MSFBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h>
@@ -17,7 +17,7 @@ PDB::PDB() : m_builder(m_allocator) {
         throw std::runtime_error("Failed to initialize pdb file builder.");
     }
 
-    for (uint32_t I = 0; I < pdb::kSpecialStreamCount; ++I) {
+    for (uint32_t idx = 0; idx < pdb::kSpecialStreamCount; ++idx) {
         if (!m_builder.getMsfBuilder().addStream(0)) {
             throw std::runtime_error("Failed to add initial stream.");
         }

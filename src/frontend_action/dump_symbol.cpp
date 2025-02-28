@@ -74,18 +74,21 @@ private:
 
 class Consumer : public ASTConsumer {
 public:
-    explicit Consumer(ASTContext& Context) {}
+    explicit Consumer(ASTContext&) {}
 
-    void HandleTranslationUnit(ASTContext& Context) override {
-        Container Symbols;
+    void HandleTranslationUnit(ASTContext& context) override {
+        Container symbols;
 
-        Visitor(Context, Symbols)
-            .TraverseDecl(Context.getTranslationUnitDecl());
+        Visitor(context, symbols)
+            .TraverseDecl(context.getTranslationUnitDecl());
 
         // Save
-        auto& SM  = Context.getSourceManager();
-        auto  Loc = SM.getLocForStartOfFile(SM.getMainFileID());
-        Symbols.write_to(SM.getFilename(Loc).str() + ".symbols");
+        auto& source_manager = context.getSourceManager();
+        auto  source_location =
+            source_manager.getLocForStartOfFile(source_manager.getMainFileID());
+        symbols.write_to(
+            source_manager.getFilename(source_location).str() + ".symbols"
+        );
     }
 };
 

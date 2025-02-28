@@ -1,4 +1,4 @@
-#include "object_file/COFF.h"
+#include "object_file/coff.h"
 
 namespace di::object_file {
 

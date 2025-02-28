@@ -1,6 +1,6 @@
 #pragma once
 
-#include "object_file/COFF.h"
+#include "object_file/coff.h"
 
 #include "data_format/bound_symbol_list.h"
 #include "data_format/raw_type_data.h"
