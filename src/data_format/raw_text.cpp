@@ -2,7 +2,7 @@
 
 namespace di::data_format {
 
-void RawText::read(const std::filesystem::path& path) {
+void RawText::read(const fs::path& path) {
     std::ifstream ifs(path);
 
     auto size = std::filesystem::file_size(path);
@@ -10,7 +10,7 @@ void RawText::read(const std::filesystem::path& path) {
     m_data.assign(std::istreambuf_iterator<char>(ifs), {});
 }
 
-void RawText::write(const std::filesystem::path& path) const {
+void RawText::write(const fs::path& path) const {
     std::ofstream ofs(path);
     if (!ofs) {
         throw std::runtime_error("Failed to open save file.");

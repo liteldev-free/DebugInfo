@@ -6,11 +6,11 @@ namespace di::object_file {
 
 class COFF {
 public:
-    explicit COFF(const std::filesystem::path& path);
+    explicit COFF(const fs::path& path);
 
     codeview::PDB70DebugInfo get_debug_info() const;
 
-    size_t                get_section_index(uint64_t offset) const;
+    size_t                get_section_index(size_t offset) const;
     object::coff_section* get_section_table();
     uint32_t              get_number_of_sections() const;
 

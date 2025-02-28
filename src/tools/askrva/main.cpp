@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) try {
         if (rva) {
             bound_symbol_list.record(
                 symbol.m_name,
-                reinterpret_cast<uint64_t>(rva),
+                reinterpret_cast<uintptr_t>(rva),
                 symbol.m_type.is_function()
             );
         } else {

@@ -15,8 +15,8 @@ public:
 
     RawTypeData() : m_storaged_IPI(m_allocator), m_storaged_TPI(m_allocator) {}
 
-    void read(const std::filesystem::path& path) override;
-    void write(const std::filesystem::path& path) const override {
+    void read(const fs::path& path) override;
+    void write(const fs::path& path) const override {
         throw std::runtime_error("Unsupported operation.");
     }
 

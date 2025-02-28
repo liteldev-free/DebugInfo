@@ -12,7 +12,7 @@ using namespace llvm::pdb;
 namespace di::object_file {
 
 PDB::PDB() : m_builder(m_allocator) {
-    constexpr uint32_t block_size = 4096;
+    constexpr auto block_size = 4096;
     if (m_builder.initialize(block_size)) {
         throw std::runtime_error("Failed to initialize pdb file builder.");
     }
@@ -24,7 +24,7 @@ PDB::PDB() : m_builder(m_allocator) {
     }
 }
 
-void PDB::write(const std::filesystem::path& path) {
+void PDB::write(const fs::path& path) {
     build();
 
     codeview::GUID out_guid;

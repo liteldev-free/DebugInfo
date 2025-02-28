@@ -12,7 +12,7 @@ using namespace llvm::pdb;
 
 namespace di::data_format {
 
-void RawTypeData::read(const std::filesystem::path& path) {
+void RawTypeData::read(const fs::path& path) {
     std::unique_ptr<IPDBSession> pdb_session;
     if (llvm::pdb::loadDataForPDB(
             PDB_ReaderType::Native,

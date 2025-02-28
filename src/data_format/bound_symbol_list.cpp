@@ -6,7 +6,7 @@ namespace di::data_format {
 
 constexpr int BOUND_SYMBOL_LIST_FORMAT_VERSION = 1;
 
-void BoundSymbolList::read(const std::filesystem::path& path) {
+void BoundSymbolList::read(const fs::path& path) {
     std::ifstream ifs(path);
     if (!ifs) {
         throw std::runtime_error("Failed to open data path.");
@@ -25,7 +25,7 @@ void BoundSymbolList::read(const std::filesystem::path& path) {
     }
 }
 
-void BoundSymbolList::write(const std::filesystem::path& path) const {
+void BoundSymbolList::write(const fs::path& path) const {
     std::ofstream ofs(path);
     if (!ofs) {
         throw std::runtime_error("Failed to open file!");
@@ -47,7 +47,7 @@ void BoundSymbolList::write(const std::filesystem::path& path) const {
 
 void BoundSymbolList::record(
     std::string_view symbol,
-    uint64_t         rva,
+    rva_t            rva,
     bool             is_function
 ) {
     m_entities.emplace(BoundSymbol{std::string(symbol), rva, is_function});

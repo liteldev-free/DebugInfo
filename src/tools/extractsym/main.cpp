@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) try {
 
     auto publics_symbols =
         publics_symbol_stream->getSymbolArray().getUnderlyingStream();
-    for (uint32_t offset : publics_stream->getPublicsTable()) {
+    for (auto offset : publics_stream->getPublicsTable()) {
         auto cv_symbol = readSymbolFromStream(publics_symbols, offset);
         auto public_sym32 =
             SymbolDeserializer::deserializeAs<PublicSym32>(cv_symbol.get());

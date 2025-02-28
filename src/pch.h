@@ -27,3 +27,4 @@ using namespace llvm;
 // Helper
 
 #include "nonstd.h"
+#include "typedef.h"

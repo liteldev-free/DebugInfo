@@ -13,8 +13,8 @@ public:
 
     // this method in this class supports multiple calls (reading multiple
     // files)
-    void read(const std::filesystem::path& path) override;
-    void write(const std::filesystem::path& path) const override;
+    void read(const fs::path& path) override;
+    void write(const fs::path& path) const override;
 
     void record(const std::string& symbol, DeclType type);
 

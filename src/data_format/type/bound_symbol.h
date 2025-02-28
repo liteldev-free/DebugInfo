@@ -6,7 +6,7 @@ namespace di {
 
 struct BoundSymbol {
     std::string m_symbol_name;
-    uint64_t    m_rva;
+    rva_t       m_rva;
     bool        m_is_function;
 
     bool operator==(const BoundSymbol& other) const {

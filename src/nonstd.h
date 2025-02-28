@@ -51,3 +51,5 @@ struct hash<std::tuple<TT...>> {
 };
 
 } // namespace std
+
+namespace fs = std::filesystem;

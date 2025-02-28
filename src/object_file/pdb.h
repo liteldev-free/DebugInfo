@@ -30,7 +30,7 @@ public:
         m_owning_raw_type_data = std::move(raw_type_data);
     }
 
-    void write(const std::filesystem::path& path);
+    void write(const fs::path& path);
 
 private:
     void build();
@@ -44,7 +44,7 @@ private:
     owning_symbol_data_t m_owning_symbol_data;
     owning_type_data_t   m_owning_raw_type_data;
 
-    uint64_t m_image_base;
+    addr_t m_image_base;
 
     BumpPtrAllocator    m_allocator;
     pdb::PDBFileBuilder m_builder;

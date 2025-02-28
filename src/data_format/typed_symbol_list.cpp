@@ -2,7 +2,7 @@
 
 namespace di::data_format {
 
-void TypedSymbolList::read(const std::filesystem::path& path) {
+void TypedSymbolList::read(const fs::path& path) {
     std::ifstream ifs(path);
     if (!ifs) {
         throw std::runtime_error("Failed to open symlist file.");
@@ -27,7 +27,7 @@ void TypedSymbolList::read(const std::filesystem::path& path) {
     }
 }
 
-void TypedSymbolList::write(const std::filesystem::path& path) const {
+void TypedSymbolList::write(const fs::path& path) const {
     std::ofstream ofs(path);
     for (const auto& [symbol, decl_type] : m_data) {
         ofs << symbol << ", " << decl_type.string() << "\n";

@@ -2,7 +2,7 @@
 
 namespace di::object_file {
 
-COFF::COFF(const std::filesystem::path& path) {
+COFF::COFF(const fs::path& path) {
     using namespace object;
 
     auto obj_or_err = ObjectFile::createObjectFile(path.string());
@@ -38,10 +38,10 @@ codeview::PDB70DebugInfo COFF::get_debug_info() const {
     return debug_info->PDB70;
 }
 
-size_t COFF::get_section_index(uint64_t offset) const {
+size_t COFF::get_section_index(size_t offset) const {
     using namespace object;
 
-    uint64_t current_index = 0;
+    size_t current_index{};
     for (const SectionRef& sec_ref : get_owning_coff().sections()) {
         const coff_section* section = get_owning_coff().getCOFFSection(sec_ref);
         if (offset >= section->VirtualAddress
