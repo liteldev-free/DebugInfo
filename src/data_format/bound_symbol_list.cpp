@@ -4,8 +4,6 @@
 
 namespace di::data_format {
 
-constexpr int BOUND_SYMBOL_LIST_FORMAT_VERSION = 1;
-
 void BoundSymbolList::read(const fs::path& path) {
     std::ifstream ifs(path);
     if (!ifs) {
@@ -13,9 +11,6 @@ void BoundSymbolList::read(const fs::path& path) {
     }
 
     auto data = nlohmann::json::parse(ifs);
-    if (data["version"] != BOUND_SYMBOL_LIST_FORMAT_VERSION) {
-        throw std::runtime_error("Unsupported data version.");
-    }
 
     m_entities.clear();
     for (const auto& entity : data["data"]) {
@@ -32,10 +27,8 @@ void BoundSymbolList::write(const fs::path& path) const {
     }
 
     nlohmann::json data;
-
-    data["version"] = BOUND_SYMBOL_LIST_FORMAT_VERSION;
     for (const auto& entity : m_entities) {
-        data["data"].emplace_back(nlohmann::json{
+        data.emplace_back(nlohmann::json{
             {"symbol",      entity.m_symbol_name},
             {"rva",         entity.m_rva        },
             {"is_function", entity.m_is_function}

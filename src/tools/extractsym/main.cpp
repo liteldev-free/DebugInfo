@@ -14,7 +14,7 @@ using namespace llvm::pdb;
 using namespace llvm::codeview;
 
 auto load_args(int argc, char* argv[]) {
-    argparse::ArgumentParser program("extractpdb", "1.0.0");
+    argparse::ArgumentParser program("extractpdb");
 
     struct {
         std::string m_program_database_path;
