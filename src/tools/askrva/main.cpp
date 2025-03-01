@@ -6,6 +6,8 @@
 
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
 #include <pl/SymbolProvider.h>
+#else
+#include "data_format/magic_blob.h"
 #endif
 
 using namespace di;
@@ -16,6 +18,7 @@ using namespace di;
     struct {
         std::vector<std::string> m_input_paths;
         std::string              m_output_path;
+        std::string              m_magic_blob_path;
 
         std::optional<std::string> m_output_failed_path;
     } args;
@@ -29,7 +32,12 @@ using namespace di;
         .store_into(args.m_input_paths)
         .nargs(argparse::nargs_pattern::at_least_one)
         .required();
-    
+
+    program.add_argument("--magic-blob")
+        .help("Path to magic blob (for builtin-symbol-resolver only).")
+        .default_value("bedrock_runtime_data")
+        .store_into(args.m_magic_blob_path);
+
     program.add_argument("--output", "-o")
         .help("Path to output.")
         .store_into(args.m_output_path)
@@ -61,7 +69,12 @@ int main(int argc, char* argv[]) try {
     auto symlist = data_format::TypedSymbolList();
 
     data_format::BoundSymbolList bound_symbol_list;
-    data_format::RawText         raw_text;
+    data_format::RawText         failed_list;
+
+#if !DI_USE_NATIVE_SYMBOL_RESOLVER
+    data_format::MagicBlob magic_blob;
+    magic_blob.read(args.m_magic_blob_path);
+#endif
 
     symlist.for_each([&](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
@@ -71,7 +84,7 @@ int main(int argc, char* argv[]) try {
             sym.size()
         );
 #else
-        auto rva = (void*)nullptr; // TODO
+        auto rva = magic_blob.query(sym);
 #endif
         if (rva) {
             bound_symbol_list.record(
@@ -80,13 +93,13 @@ int main(int argc, char* argv[]) try {
                 symbol.m_type.is_function()
             );
         } else {
-            raw_text.record(symbol.m_name);
+            failed_list.record(symbol.m_name);
         }
     });
 
     bound_symbol_list.write(args.m_output_path);
     if (args.m_output_failed_path) {
-        raw_text.write(*args.m_output_failed_path);
+        failed_list.write(*args.m_output_failed_path);
     }
 
     std::println("Everything is OK.");
