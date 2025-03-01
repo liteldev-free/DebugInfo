@@ -1,17 +1,12 @@
-#include <llvm/DebugInfo/CodeView/CVRecord.h>
-#include <llvm/DebugInfo/CodeView/SymbolDeserializer.h>
-#include <llvm/DebugInfo/PDB/IPDBSession.h>
-#include <llvm/DebugInfo/PDB/Native/NativeSession.h>
-#include <llvm/DebugInfo/PDB/Native/PDBFile.h>
-#include <llvm/DebugInfo/PDB/Native/PublicsStream.h>
-#include <llvm/DebugInfo/PDB/Native/SymbolStream.h>
-#include <llvm/DebugInfo/PDB/PDB.h>
-
 #include <argparse/argparse.hpp>
 
-using namespace llvm;
-using namespace llvm::pdb;
-using namespace llvm::codeview;
+#include <llvm/DebugInfo/CodeView/SymbolRecord.h>
+
+#include "data_format/typed_symbol_list.h"
+#include "object_file/pdb.h"
+
+using namespace di;
+using namespace di::object_file;
 
 auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("extractpdb");
@@ -44,50 +39,23 @@ int main(int argc, char* argv[]) try {
 
     auto args = load_args(argc, argv);
 
-    std::unique_ptr<IPDBSession> pdb_session;
-    if (llvm::pdb::loadDataForPDB(
-            PDB_ReaderType::Native,
-            args.m_program_database_path,
-            pdb_session
-        )) {
-        throw std::runtime_error("Failed to load PDB.");
-    }
+    PDB pdb;
+    pdb.read(args.m_program_database_path);
 
-    auto  native_session = static_cast<NativeSession*>(pdb_session.get());
-    auto& pdb_file       = native_session->getPDBFile();
+    data_format::TypedSymbolList symbol_list;
 
-    auto publics_stream = pdb_file.getPDBPublicsStream();
-    if (!publics_stream) {
-        throw std::runtime_error("Failed to get public stream from PDB.");
-    }
+    pdb.for_each<PDB::Public>([&symbol_list](const codeview::PublicSym32& symbol
+                              ) {
+        using codeview::PublicSymFlags;
 
-    auto publics_symbol_stream = pdb_file.getPDBSymbolStream();
-    if (!publics_symbol_stream) {
-        throw std::runtime_error("Failed to get symbol stream from PDB.");
-    }
+        auto is_fun =
+            (symbol.Flags & PublicSymFlags::Function) != PublicSymFlags::None;
+        symbol_list.record(
+            symbol.Name.str(),
+            is_fun ? DeclType::Function : DeclType::Var
+        );
+    });
 
-    std::ofstream ofs(args.m_output_path);
-    if (!ofs) {
-        throw std::runtime_error("Failed to open output file.");
-    }
-
-    auto publics_symbols =
-        publics_symbol_stream->getSymbolArray().getUnderlyingStream();
-    for (auto offset : publics_stream->getPublicsTable()) {
-        auto cv_symbol = readSymbolFromStream(publics_symbols, offset);
-        auto public_sym32 =
-            SymbolDeserializer::deserializeAs<PublicSym32>(cv_symbol.get());
-        if (!public_sym32) {
-            throw std::runtime_error("Unsupported symbol type.");
-        }
-
-        ofs
-            << ((public_sym32->Flags & PublicSymFlags::Function)
-                        != PublicSymFlags::None
-                    ? "Function, "
-                    : "Var, ")
-            << public_sym32->Name.str() << "\n";
-    }
 
     return 0;
 } catch (const std::exception& e) {

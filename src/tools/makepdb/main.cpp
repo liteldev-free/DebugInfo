@@ -4,7 +4,6 @@
 #include "object_file/pdb.h"
 
 #include "data_format/bound_symbol_list.h"
-#include "data_format/raw_type_data.h"
 
 using namespace di;
 
@@ -58,16 +57,13 @@ int main(int argc, char* argv[]) try {
     auto symbol_data = std::make_unique<data_format::BoundSymbolList>();
     symbol_data->read(args.symbol_data_path);
 
-    std::unique_ptr<data_format::RawTypeData> raw_type_data;
+    object_file::PDB pdb;
     if (args.typeinfo_pdb_path) {
-        raw_type_data = std::make_unique<data_format::RawTypeData>();
-        raw_type_data->read(*args.typeinfo_pdb_path);
+        pdb.read(*args.typeinfo_pdb_path);
     }
 
-    object_file::PDB pdb;
     pdb.set_coff_object(std::move(server_program));
     pdb.set_symbol_data(std::move(symbol_data));
-    pdb.set_raw_type_data(std::move(raw_type_data));
 
     pdb.write(args.output_path);
 
