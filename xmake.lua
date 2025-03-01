@@ -48,13 +48,12 @@ target('libdi')
     add_files('src/**.cpp')
     set_pcxxheader('src/pch.h')
     
+    remove_files('src/tools/**')
     set_basename('di')
 
     add_packages(
         'nlohmann_json'
     )
-
-    remove_files('src/tools/**')
 
 target('askrva')
     set_kind('binary')
@@ -77,6 +76,11 @@ target('blob-extractor')
     add_deps('libdi')
     add_files('src/tools/blob-extractor/**.cpp')
     set_pcxxheader('src/pch.h')
+
+    add_packages(
+        'nlohmann_json',
+        'argparse'
+    )
 
 target('dumpsym')
     set_kind('shared')
