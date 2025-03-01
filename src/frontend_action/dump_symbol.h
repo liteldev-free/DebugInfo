@@ -19,9 +19,11 @@ protected:
     bool ParseArgs(
         const clang::CompilerInstance&,
         const std::vector<std::string>& args
-    ) override;
+    ) override {
+        return true;
+    }
 
-    ActionType getActionType() override;
+    ActionType getActionType() override { return AddAfterMainAction; }
 };
 
 } // namespace di::frontend_action

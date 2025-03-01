@@ -24,7 +24,7 @@ public:
         COUNT
     };
 
-    constexpr explicit DeclType(Enum value) : m_data(value) {}
+    constexpr DeclType(Enum value) : m_data(value) {}
     constexpr explicit DeclType(std::string_view str) {
         using namespace util::string;
 

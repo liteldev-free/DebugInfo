@@ -1,5 +1,7 @@
 #include "frontend_action/dump_symbol.h"
 
+#include "data_format/typed_symbol_list.h"
+
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/Mangle.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -7,27 +9,14 @@
 
 using namespace clang;
 
+using namespace di;
+using namespace di::data_format;
+
 namespace {
-
-bool config_record_decl_name = false;
-
-class Container : private std::unordered_set<std::string> {
-public:
-    void put(const std::string& symbol) { emplace(symbol); }
-
-    void write_to(const std::string& path) {
-        std::ofstream ofs(path);
-        if (ofs) {
-            for (const auto& E : *this) {
-                ofs << E << "\n";
-            }
-        }
-    }
-};
 
 class Visitor : public RecursiveASTVisitor<Visitor> {
 public:
-    Visitor(ASTContext& context, Container& container)
+    Visitor(ASTContext& context, TypedSymbolList& container)
     : m_namegen(context),
       m_symbol_container(container) {}
 
@@ -54,14 +43,10 @@ public:
 
         auto mangled_name = m_namegen.getName(decl);
         if (!mangled_name.empty()) {
-            if (config_record_decl_name) {
-                mangled_name = std::format(
-                    "{}, {}",
-                    decl->getDeclKindName(),
-                    mangled_name
-                );
-            }
-            m_symbol_container.put(mangled_name);
+            m_symbol_container.record(
+                mangled_name,
+                DeclType{decl->getDeclKindName()}
+            );
         }
 
         return true;
@@ -69,7 +54,7 @@ public:
 
 private:
     ASTNameGenerator m_namegen;
-    Container&       m_symbol_container;
+    TypedSymbolList& m_symbol_container;
 };
 
 class Consumer : public ASTConsumer {
@@ -77,7 +62,7 @@ public:
     explicit Consumer(ASTContext&) {}
 
     void HandleTranslationUnit(ASTContext& context) override {
-        Container symbols;
+        TypedSymbolList symbols;
 
         Visitor(context, symbols)
             .TraverseDecl(context.getTranslationUnitDecl());
@@ -86,7 +71,7 @@ public:
         auto& source_manager = context.getSourceManager();
         auto  source_location =
             source_manager.getLocForStartOfFile(source_manager.getMainFileID());
-        symbols.write_to(
+        symbols.write(
             source_manager.getFilename(source_location).str() + ".symbols"
         );
     }
@@ -101,22 +86,6 @@ std::unique_ptr<ASTConsumer> DumpSymbolFrontendAction::CreateASTConsumer(
     llvm::StringRef
 ) {
     return std::make_unique<Consumer>(instance.getASTContext());
-}
-
-bool DumpSymbolFrontendAction::ParseArgs(
-    const CompilerInstance&,
-    const std::vector<std::string>& args
-) {
-    for (const auto& arg : args) {
-        if (arg.ends_with("record-decl-name")) {
-            config_record_decl_name = true;
-        }
-    }
-    return true;
-}
-
-PluginASTAction::ActionType DumpSymbolFrontendAction::getActionType() {
-    return AddAfterMainAction;
 }
 
 } // namespace di::frontend_action
