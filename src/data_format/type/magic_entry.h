@@ -12,10 +12,10 @@ struct MagicEntry {
     // Do not put the original hash in the entry yet.
     // hash_t hash;
 
-    constexpr bool is_function() { return flags[0]; }
-    constexpr bool _unk2() { return flags[1]; }
-    constexpr bool is_verbose() { return flags[2]; }
-    constexpr bool _unk4() { return flags[3]; }
+    constexpr bool is_function() const { return flags[0]; }
+    constexpr bool _unk2() const { return flags[1]; }
+    constexpr bool is_verbose() const { return flags[2]; }
+    constexpr bool _unk4() const { return flags[3]; }
 };
 
 } // namespace di

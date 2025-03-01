@@ -55,14 +55,14 @@ void MagicBlob::read(const fs::path& path) {
         n_rva += rva;
         rva    = n_rva;
 
-        m_entities.emplace(hash, std::make_unique<MagicEntry>(flags, rva));
+        m_entries.emplace(hash, std::make_unique<MagicEntry>(flags, rva));
     }
 }
 
 MagicEntry const* MagicBlob::query(std::string_view symbol) const {
     auto query_hash = XXH64(symbol.data(), symbol.size(), m_query_seed);
-    if (m_entities.contains(query_hash)) {
-        return m_entities.at(query_hash).get();
+    if (m_entries.contains(query_hash)) {
+        return m_entries.at(query_hash).get();
     }
     return nullptr;
 }
