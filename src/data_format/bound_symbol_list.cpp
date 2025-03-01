@@ -39,11 +39,11 @@ void BoundSymbolList::write(const fs::path& path) const {
 }
 
 void BoundSymbolList::record(
-    std::string_view symbol,
-    rva_t            rva,
-    bool             is_function
+    const std::string& symbol,
+    rva_t              rva,
+    bool               is_function
 ) {
-    m_entities.emplace(BoundSymbol{std::string(symbol), rva, is_function});
+    m_entities.emplace(BoundSymbol{symbol, rva, is_function});
 }
 
 } // namespace di::data_format

@@ -52,7 +52,7 @@ public:
         // Do not mangle template deduction guides.
         if (isa<CXXDeductionGuideDecl>(decl)) return true;
 
-        std::string mangled_name = m_namegen.getName(decl);
+        auto mangled_name = m_namegen.getName(decl);
         if (!mangled_name.empty()) {
             if (config_record_decl_name) {
                 mangled_name = std::format(
