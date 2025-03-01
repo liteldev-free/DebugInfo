@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data_format/io/io_base.h"
+#include "io/io_base.h"
 
 #include "data_format/type/decl_type.h"
 #include "data_format/type/typed_symbol.h"

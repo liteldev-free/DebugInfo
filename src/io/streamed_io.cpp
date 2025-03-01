@@ -1,4 +1,4 @@
-#include "data_format/io/streamed_io.h"
+#include "io/streamed_io.h"
 
 namespace di {
 

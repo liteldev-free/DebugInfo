@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data_format/io/streamed_io.h"
 #include "data_format/type/magic_entry.h"
+#include "io/streamed_io.h"
 
 namespace di::data_format {
 

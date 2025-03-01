@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data_format/io/io_base.h"
+#include "io/io_base.h"
 
 namespace di::data_format {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data_format/io/io_base.h"
 #include "data_format/type/bound_symbol.h"
+#include "io/io_base.h"
 
 namespace di::data_format {
 
