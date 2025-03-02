@@ -4,7 +4,7 @@
 
 namespace di::data_format {
 
-class RawText : public IOBase {
+class RawText : public io::IOBase {
 public:
     void read(const fs::path& path) override;
     void write(const fs::path& path) const override;

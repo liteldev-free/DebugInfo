@@ -5,7 +5,7 @@
 
 namespace di::data_format {
 
-class BoundSymbolList : public IOBase {
+class BoundSymbolList : public io::IOBase {
 public:
     using for_each_callback_t = std::function<void(BoundSymbol const&)>;
 

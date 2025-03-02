@@ -1,6 +1,6 @@
 #pragma once
 
-namespace di {
+namespace di::io {
 
 class IOBase {
 public:
@@ -10,4 +10,4 @@ public:
     virtual void write(const fs::path& path) const = 0;
 };
 
-} // namespace di
+} // namespace di::io

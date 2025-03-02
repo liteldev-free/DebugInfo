@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 using namespace di;
+using namespace di::data_format;
 
 auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("blob-extractor");
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) try {
 
     auto args = load_args(argc, argv);
 
-    data_format::MagicBlob blob;
+    MagicBlob blob;
     blob.read(args.m_magic_blob_path);
 
     nlohmann::json data;

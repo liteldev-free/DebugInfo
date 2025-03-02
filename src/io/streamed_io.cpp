@@ -1,6 +1,6 @@
 #include "io/streamed_io.h"
 
-namespace di {
+namespace di::io {
 
 void StreamedIO::read(const fs::path& path) {
     m_file_stream.open(path, std::ios::binary);
@@ -14,4 +14,4 @@ void StreamedIO::write(const fs::path& path) const {
     ofs << m_file_stream.rdbuf();
 }
 
-} // namespace di
+} // namespace di::io

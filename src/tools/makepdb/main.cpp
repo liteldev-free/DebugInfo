@@ -6,6 +6,7 @@
 #include "data_format/bound_symbol_list.h"
 
 using namespace di;
+using namespace di::data_format;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) try {
     auto server_program =
         std::make_unique<object_file::COFF>(args.server_program_path);
 
-    auto symbol_data = std::make_unique<data_format::BoundSymbolList>();
+    auto symbol_data = std::make_unique<BoundSymbolList>();
     symbol_data->read(args.symbol_data_path);
 
     object_file::PDB pdb;

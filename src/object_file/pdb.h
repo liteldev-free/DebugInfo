@@ -13,7 +13,7 @@
 
 namespace di::object_file {
 
-class PDB : public IOBase {
+class PDB : public io::IOBase {
 public:
     using owning_coff_t        = std::unique_ptr<COFF>;
     using owning_symbol_data_t = std::unique_ptr<data_format::BoundSymbolList>;

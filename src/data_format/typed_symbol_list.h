@@ -7,7 +7,7 @@
 
 namespace di::data_format {
 
-class TypedSymbolList : public IOBase {
+class TypedSymbolList : public io::IOBase {
 public:
     using for_each_callback_t = std::function<void(TypedSymbol const&)>;
 

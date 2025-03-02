@@ -2,9 +2,9 @@
 
 #include "io/io_base.h"
 
-namespace di {
+namespace di::io {
 
-class StreamedIO : public IOBase {
+class StreamedIO : public io::IOBase {
 public:
     void read(const fs::path& path) override;
     void write(const fs::path& path) const override;
@@ -40,4 +40,4 @@ private:
     std::ifstream m_file_stream;
 };
 
-} // namespace di
+} // namespace di::io

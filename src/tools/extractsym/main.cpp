@@ -7,6 +7,7 @@
 
 using namespace di;
 using namespace di::object_file;
+using namespace di::data_format;
 
 auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("extractpdb");
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) try {
     PDB pdb;
     pdb.read(args.m_program_database_path);
 
-    data_format::TypedSymbolList symbol_list;
+    TypedSymbolList symbol_list;
 
     pdb.for_each<PDB::Public>([&symbol_list](const codeview::PublicSym32& symbol
                               ) {

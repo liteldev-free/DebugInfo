@@ -5,7 +5,7 @@
 
 namespace di::data_format {
 
-class MagicBlob : public StreamedIO {
+class MagicBlob : public io::StreamedIO {
 public:
     using for_each_callback_t = std::function<void(hash_t, MagicEntry const&)>;
 

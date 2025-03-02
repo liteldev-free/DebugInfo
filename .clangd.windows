@@ -1,2 +1,0 @@
-CompileFlags:
-    Add: ["-std:latest", "/clang:-std=c++23"]

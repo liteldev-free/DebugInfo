@@ -11,6 +11,7 @@
 #endif
 
 using namespace di;
+using namespace di::data_format;
 
 [[nodiscard]] auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("askrva");
@@ -66,13 +67,13 @@ using namespace di;
 int main(int argc, char* argv[]) try {
 
     auto args    = load_args(argc, argv);
-    auto symlist = data_format::TypedSymbolList();
+    auto symlist = TypedSymbolList();
 
-    data_format::BoundSymbolList bound_symbol_list;
-    data_format::RawText         failed_list;
+    BoundSymbolList bound_symbol_list;
+    RawText         failed_list;
 
 #if !DI_USE_NATIVE_SYMBOL_RESOLVER
-    data_format::MagicBlob magic_blob;
+    MagicBlob magic_blob;
     magic_blob.read(args.m_magic_blob_path);
 #endif
 
