@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json_fwd.hpp>
+
 namespace di {
 
 struct MagicEntry {
@@ -17,5 +19,10 @@ struct MagicEntry {
     constexpr bool is_verbose() const { return flags[2]; }
     constexpr bool _unk4() const { return flags[3]; }
 };
+
+void to_json(nlohmann::json& json, const MagicEntry& entry);
+
+// TODO
+// void from_json(const nlohmann::json& json, MagicEntry& entry);
 
 } // namespace di

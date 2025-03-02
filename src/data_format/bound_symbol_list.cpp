@@ -28,11 +28,7 @@ void BoundSymbolList::write(const fs::path& path) const {
 
     nlohmann::json data;
     for (const auto& entity : m_entities) {
-        data.emplace_back(nlohmann::json{
-            {"symbol",      entity.m_symbol_name},
-            {"rva",         entity.m_rva        },
-            {"is_function", entity.m_is_function}
-        });
+        data.emplace_back(entity);
     }
 
     ofs << data.dump(4);

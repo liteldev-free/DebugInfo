@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/functional/hash.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 namespace di {
 
@@ -15,6 +15,9 @@ struct BoundSymbol {
     }
 };
 
+void to_json(nlohmann::json& json, const BoundSymbol& symbol);
+void from_json(const nlohmann::json& json, BoundSymbol& symbol);
+
 } // namespace di
 
 namespace std {
@@ -23,9 +26,9 @@ template <>
 struct hash<di::BoundSymbol> {
     constexpr size_t operator()(const di::BoundSymbol& symbol) const {
         size_t seed = 0;
-        boost::hash_combine(seed, symbol.m_symbol_name);
-        boost::hash_combine(seed, symbol.m_rva);
-        boost::hash_combine(seed, symbol.m_is_function);
+        hash_combine(seed, symbol.m_symbol_name);
+        hash_combine(seed, symbol.m_rva);
+        hash_combine(seed, symbol.m_is_function);
         return seed;
     }
 };
