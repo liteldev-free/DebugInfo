@@ -4,9 +4,7 @@ namespace di::io {
 
 void StreamedIO::read(const fs::path& path) {
     m_file_stream.open(path, std::ios::binary);
-    if (!m_file_stream) {
-        throw std::runtime_error("Failed to open file!");
-    }
+    if (!m_file_stream) throw UnableToOpenException(path);
 }
 
 void StreamedIO::write(const fs::path& path) const {

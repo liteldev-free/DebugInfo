@@ -5,6 +5,7 @@
 
 using namespace di;
 using namespace di::data_format;
+using namespace di::io;
 
 auto load_args(int argc, char* argv[]) {
     argparse::ArgumentParser program("blob-extractor");
@@ -47,14 +48,12 @@ int main(int argc, char* argv[]) try {
     });
 
     std::ofstream ofs(args.m_output_path);
-    if (!ofs) {
-        throw std::runtime_error("Failed to open file!");
-    }
+    if (!ofs) throw UnableToOpenException(args.m_output_path);
 
     ofs << data.dump(4);
 
     return 0;
-} catch (const std::exception& e) {
-    std::println("E: {}", e.what());
+} catch (const BaseException& e) {
+    std::cerr << e;
     return -1;
 }

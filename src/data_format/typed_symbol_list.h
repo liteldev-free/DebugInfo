@@ -26,4 +26,20 @@ private:
     std::unordered_set<TypedSymbol> m_data;
 };
 
+class MissingDeclTypeException
+: public RuntimeException<MissingDeclTypeException> {
+public:
+    explicit MissingDeclTypeException(
+        const fs::path&  list_file_path,
+        std::string_view current_line
+    )
+    : RuntimeException(
+          "The symbol data file does not contain the decl_type. Please "
+          "regenerate it using the -record-decl-name option."
+      ) {
+        add_context("path", list_file_path.string());
+        add_context("current_line", current_line);
+    }
+};
+
 } // namespace di::data_format

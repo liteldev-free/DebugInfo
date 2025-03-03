@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) try {
     pdb.write(args.output_path);
 
     return 0;
-} catch (const std::exception& e) {
-    std::println("E: {}", e.what());
+} catch (const BaseException& e) {
+    std::cerr << e;
     return -1;
 }

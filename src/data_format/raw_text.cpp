@@ -1,5 +1,7 @@
 #include "data_format/raw_text.h"
 
+using namespace di::io;
+
 namespace di::data_format {
 
 void RawText::read(const fs::path& path) {
@@ -12,9 +14,7 @@ void RawText::read(const fs::path& path) {
 
 void RawText::write(const fs::path& path) const {
     std::ofstream ofs(path);
-    if (!ofs) {
-        throw std::runtime_error("Failed to open save file.");
-    }
+    if (!ofs) throw UnableToOpenException(path);
 
     ofs << m_data;
 }

@@ -4,11 +4,11 @@
 
 namespace di::data_format {
 
+using namespace io;
+
 void BoundSymbolList::read(const fs::path& path) {
     std::ifstream ifs(path);
-    if (!ifs) {
-        throw std::runtime_error("Failed to open data path.");
-    }
+    if (!ifs) throw UnableToOpenException(path);
 
     auto data = nlohmann::json::parse(ifs);
 
@@ -20,9 +20,7 @@ void BoundSymbolList::read(const fs::path& path) {
 
 void BoundSymbolList::write(const fs::path& path) const {
     std::ofstream ofs(path);
-    if (!ofs) {
-        throw std::runtime_error("Failed to open file!");
-    }
+    if (!ofs) throw UnableToOpenException(path);
 
     nlohmann::json data;
     for (const auto& entity : m_entities) {

@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) try {
 
     std::println("Everything is OK.");
     return 0;
-} catch (const std::exception& e) {
-    std::println("E: {}", e.what());
-    return -1;
+} catch (const BaseException& e) {
+    std::cerr << e;
+    return 1;
 }

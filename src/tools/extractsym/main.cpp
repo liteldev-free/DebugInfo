@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) try {
 
 
     return 0;
-} catch (const std::exception& e) {
-    std::println("E: {}", e.what());
+} catch (const BaseException& e) {
+    std::cerr << e;
     return -1;
 }

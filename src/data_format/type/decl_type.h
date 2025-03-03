@@ -49,7 +49,7 @@ public:
         HSTR(VarTemplateSpecialization);
     #undef HSTR
         default:
-            throw std::invalid_argument("Unexpected decl type.");
+            throw EnumTransformException(str, Enum{});
         }
 
         // clang-format on
@@ -87,7 +87,7 @@ public:
         HSTR(VarTemplateSpecialization);
     #undef HSTR
         default:
-            throw std::runtime_error("Unexpected decl type.");
+            throw EnumTransformException(m_data, Enum{});
         }
 
         // clang-format on

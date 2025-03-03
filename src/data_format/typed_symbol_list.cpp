@@ -1,12 +1,12 @@
 #include "data_format/typed_symbol_list.h"
 
+using namespace di::io;
+
 namespace di::data_format {
 
 void TypedSymbolList::read(const fs::path& path) {
     std::ifstream ifs(path);
-    if (!ifs) {
-        throw std::runtime_error("Failed to open symlist file.");
-    }
+    if (!ifs) throw UnableToOpenException(path);
 
     std::string line;
     while (std::getline(ifs, line)) {
@@ -14,10 +14,7 @@ void TypedSymbolList::read(const fs::path& path) {
 
         auto sep_pos = line.find(", ");
         if (sep_pos == std::string::npos) {
-            throw std::runtime_error(
-                "Symbol data is not included declType, please re-generate "
-                "symlist file with -record-decl-name."
-            );
+            throw MissingDeclTypeException(path, line);
         }
 
         auto decl_type_s = line.substr(0, sep_pos);
