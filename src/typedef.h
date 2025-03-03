@@ -8,3 +8,5 @@ using addr_t = uint64_t;
 using hash_t = uint64_t;
 
 } // namespace di
+
+namespace fs = std::filesystem;

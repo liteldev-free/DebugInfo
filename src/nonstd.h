@@ -43,7 +43,7 @@ struct HashValueImpl<Tuple, 0> {
 
 template <typename... TT>
 struct hash<std::tuple<TT...>> {
-    size_t operator()(std::tuple<TT...> const& tt) const {
+    constexpr size_t operator()(std::tuple<TT...> const& tt) const {
         size_t seed = 0;
         HashValueImpl<std::tuple<TT...>>::apply(seed, tt);
         return seed;
@@ -51,5 +51,3 @@ struct hash<std::tuple<TT...>> {
 };
 
 } // namespace std
-
-namespace fs = std::filesystem;

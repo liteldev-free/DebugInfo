@@ -14,9 +14,7 @@ void BoundSymbolList::read(const fs::path& path) {
 
     m_entities.clear();
     for (const auto& entity : data["data"]) {
-        m_entities.emplace(
-            BoundSymbol{entity["symbol"], entity["rva"], entity["is_function"]}
-        );
+        m_entities.emplace(entity);
     }
 }
 

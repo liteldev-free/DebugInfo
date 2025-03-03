@@ -11,7 +11,7 @@ auto load_args(int argc, char* argv[]) {
 
     struct {
         std::string m_magic_blob_path;
-        std::string m_output_path;
+        fs::path    m_output_path;
     } args;
 
     // clang-format off
@@ -23,12 +23,13 @@ auto load_args(int argc, char* argv[]) {
 
     program.add_argument("--output", "-o")
         .help("Path to output symlist.")
-        .store_into(args.m_output_path)
         .required();
 
     // clang-format on
 
     program.parse_args(argc, argv);
+
+    args.m_output_path = program.get("--output");
 
     return args;
 }

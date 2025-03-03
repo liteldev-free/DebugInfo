@@ -11,9 +11,12 @@ using namespace llvm;
 #include <print>
 
 #include <exception>
+#include <stacktrace>
+
 #include <functional>
 #include <memory>
 
+#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -28,3 +31,5 @@ using namespace llvm;
 
 #include "nonstd.h"
 #include "typedef.h"
+
+#include "error.h"
