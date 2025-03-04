@@ -22,58 +22,38 @@ using namespace llvm::codeview;
 namespace di::object_file {
 
 void PDB::read(const fs::path& path) {
-    if (loadDataForPDB(PDB_ReaderType::Native, path.string(), m_session)) {
-        throw std::runtime_error("Failed to load PDB.");
-    }
+    check_llvm_result(
+        loadDataForPDB(PDB_ReaderType::Native, path.string(), m_session)
+    );
 
-    std::unique_ptr<IPDBSession> pdb_session;
-    if (llvm::pdb::loadDataForPDB(
-            PDB_ReaderType::Native,
-            path.string(),
-            pdb_session
-        )) {
-        throw std::runtime_error("Failed to load PDB.");
-    }
-
-    auto  native_session = static_cast<NativeSession*>(pdb_session.get());
-    auto& pdb_file       = native_session->getPDBFile();
+    auto& pdb_file = get_native_session().getPDBFile();
 
     SmallVector<codeview::TypeIndex, 128> type_map;
     SmallVector<codeview::TypeIndex, 128> id_map;
 
-    if (auto tpi_stream = pdb_file.getPDBTpiStream()) {
-        if (codeview::mergeTypeRecords(
-                *m_storaged_Tpi,
-                type_map,
-                (*tpi_stream).typeArray()
-            )) {
-            throw std::runtime_error("Failed to merge type record.");
-        }
-    } else {
-        throw std::runtime_error("TPI is not valid.");
-    }
+    auto& tpi_stream = check_llvm_result(pdb_file.getPDBTpiStream());
 
-    if (auto ipi_stream = pdb_file.getPDBIpiStream()) {
-        if (codeview::mergeIdRecords(
-                *m_storaged_Ipi,
-                type_map,
-                id_map,
-                (*ipi_stream).typeArray()
-            )) {
-            throw std::runtime_error("Failed to merge id record.");
-        }
-    } else {
-        throw std::runtime_error("IPI is not valid.");
-    }
+    check_llvm_result(codeview::mergeTypeRecords(
+        *m_storaged_Tpi,
+        type_map,
+        tpi_stream.typeArray()
+    ));
+
+    auto& ipi_stream = check_llvm_result(pdb_file.getPDBIpiStream());
+
+    check_llvm_result(codeview::mergeIdRecords(
+        *m_storaged_Ipi,
+        type_map,
+        id_map,
+        ipi_stream.typeArray()
+    ));
 }
 
 void PDB::_write(const fs::path& path) {
     build();
 
     GUID out_guid;
-    if (m_builder->commit(path.string(), &out_guid)) {
-        throw std::runtime_error("Failed to create pdb!");
-    }
+    check_llvm_result(m_builder->commit(path.string(), &out_guid));
 }
 
 NativeSession& PDB::get_native_session() {
@@ -85,42 +65,28 @@ pdb::PDBFile& PDB::get_pdb_file() { return get_native_session().getPDBFile(); }
 void PDB::_for_each_public(const for_each_symbol_callback_t& callback) {
     using namespace codeview;
     auto& file           = get_pdb_file();
-    auto  publics_stream = file.getPDBPublicsStream();
-    if (!publics_stream) {
-        throw std::runtime_error("Failed to get public stream from PDB.");
-    }
+    auto& publics_stream = check_llvm_result(file.getPDBPublicsStream());
+    auto& symbol_stream  = check_llvm_result(file.getPDBSymbolStream());
 
-    auto publics_symbol_stream = file.getPDBSymbolStream();
-    if (!publics_symbol_stream) {
-        throw std::runtime_error("Failed to get symbol stream from PDB.");
-    }
-
-    auto publics_symbols =
-        publics_symbol_stream->getSymbolArray().getUnderlyingStream();
-    for (auto offset : publics_stream->getPublicsTable()) {
-        auto cv_symbol = readSymbolFromStream(publics_symbols, offset);
-        auto public_sym32 =
-            SymbolDeserializer::deserializeAs<PublicSym32>(cv_symbol.get());
-        if (!public_sym32) {
-            throw std::runtime_error("Unsupported symbol type.");
-        }
-        callback(*public_sym32);
+    auto raw_stream = symbol_stream.getSymbolArray().getUnderlyingStream();
+    for (auto offset : publics_stream.getPublicsTable()) {
+        auto cv_symbol    = readSymbolFromStream(raw_stream, offset);
+        auto public_sym32 = check_llvm_result(
+            SymbolDeserializer::deserializeAs<PublicSym32>(cv_symbol.get()),
+            "Unsupported symbol type."
+        );
+        callback(public_sym32);
     }
 }
 
 void PDB::build() {
-    constexpr auto block_size = 4096;
-
     m_builder.reset(new PDBFileBuilder{m_Alloc});
 
-    if (m_builder->initialize(block_size)) {
-        throw std::runtime_error("Failed to initialize pdb file builder.");
-    }
+    constexpr auto block_size = 4096;
+    check_llvm_result(m_builder->initialize(block_size));
 
     for (uint32_t idx = 0; idx < pdb::kSpecialStreamCount; ++idx) {
-        if (!m_builder->getMsfBuilder().addStream(0)) {
-            throw std::runtime_error("Failed to add initial stream.");
-        }
+        check_llvm_result(m_builder->getMsfBuilder().addStream(0));
     }
 
     // INFO
@@ -163,9 +129,9 @@ void PDB::build() {
         Dbi.createSectionMap(section_table_ref);
 
         // Add COFF section header stream.
-        if (Dbi.addDbgStream(DbgHeaderType::SectionHdr, section_data_ref)) {
-            throw std::runtime_error("Failed to add dbg stream.");
-        }
+        check_llvm_result(
+            Dbi.addDbgStream(DbgHeaderType::SectionHdr, section_data_ref)
+        );
     }
 
     // TPI & IPI
@@ -198,17 +164,15 @@ void PDB::build() {
 
             auto section_index =
                 m_owning_coff->get_section_index(entity.m_rva - m_image_base);
-            auto section_or_err =
-                m_owning_coff->get_owning_coff().getSection(section_index + 1);
-            if (!section_or_err) {
-                throw std::runtime_error("Invalid section.");
-            }
+            auto section = check_llvm_result(
+                m_owning_coff->get_owning_coff().getSection(section_index + 1)
+            );
 
             symbol.Name    = strdup(entity.m_symbol_name.c_str());
             symbol.NameLen = entity.m_symbol_name.size();
             symbol.Segment = section_index + 1;
-            symbol.Offset  = entity.m_rva - m_image_base
-                          - section_or_err.get()->VirtualAddress;
+            symbol.Offset =
+                entity.m_rva - m_image_base - section->VirtualAddress;
             if (entity.m_is_function) symbol.setFlags(PublicSymFlags::Function);
 
             publics.emplace_back(symbol);

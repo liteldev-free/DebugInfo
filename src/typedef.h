@@ -10,3 +10,7 @@ using hash_t = uint64_t;
 } // namespace di
 
 namespace fs = std::filesystem;
+
+// shit!
+template <typename T>
+struct TypeOnly {};

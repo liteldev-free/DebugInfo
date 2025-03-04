@@ -49,7 +49,7 @@ public:
         HSTR(VarTemplateSpecialization);
     #undef HSTR
         default:
-            throw EnumTransformException(str, Enum{});
+            throw ConvertEnumException(str, TypeOnly<Enum>{});
         }
 
         // clang-format on
@@ -87,7 +87,7 @@ public:
         HSTR(VarTemplateSpecialization);
     #undef HSTR
         default:
-            throw EnumTransformException(m_data, Enum{});
+            throw ConvertEnumException(m_data);
         }
 
         // clang-format on

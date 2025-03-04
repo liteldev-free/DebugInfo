@@ -1,5 +1,7 @@
 #pragma once
 
+#include <llvm/Support/Error.h>
+
 namespace di {
 
 class BaseException {
@@ -30,7 +32,7 @@ public:
         return static_cast<const Derived*>(this)->category();
     }
 
-    std::string what() const override {
+    std::string what() const final {
         // [exception.base] Reason...
         //
         // Context Information:
@@ -82,6 +84,12 @@ protected:
         m_context_information[key] = std::format("{}", std::forward<T>(value));
     }
 
+    template <std::integral T>
+    constexpr void add_context_v_hex(const std::string& key, T value) {
+        m_context_information[key] =
+            std::format("{:#x}", std::forward<T>(value));
+    }
+
 private:
     std::string m_reason;
 
@@ -99,26 +107,79 @@ public:
     constexpr std::string category() const { return "exception.unix"; }
 };
 
-class EnumTransformException : public RuntimeException<EnumTransformException> {
+class ConvertEnumException : public RuntimeException<ConvertEnumException> {
 public:
     // TODO: compile-time reflection.
     // TODO: remove helper.
 
-    template <typename T>
-    explicit EnumTransformException(int enum_val, T _helper = {})
+    template <Enumerate T>
+    explicit ConvertEnumException(T enum_val)
     : RuntimeException("Unable to convert string to enumeration value because "
                        "input value is bad.") {
         add_context("enum_type", typeid(T).name());
-        add_context("value", enum_val);
+        add_context("value", underlying_value(enum_val));
     }
 
     template <typename T>
-    explicit EnumTransformException(std::string_view enum_str, T _helper = {})
+    explicit ConvertEnumException(std::string_view enum_str, TypeOnly<T>)
     : RuntimeException("Unable to convert enumeration value to string because "
                        "input value is bad.") {
         add_context("enum_type", typeid(T).name());
         add_context("string", enum_str);
     }
+
+    constexpr std::string category() const { return "exception.enumconvert"; }
 };
+
+class LLVMException : public RuntimeException<LLVMException> {
+public:
+    explicit LLVMException(
+        std::string_view error_message_di   = "",
+        std::string_view error_message_llvm = ""
+    )
+    : RuntimeException("There were some problems when calling LLVM.") {
+        if (!error_message_di.empty())
+            add_context("error_message_di", error_message_di);
+        if (!error_message_llvm.empty())
+            add_context("error_message_llvm", error_message_llvm);
+    }
+
+    constexpr std::string category() const { return "exception.llvm"; }
+};
+
+constexpr void check_llvm_result(Error err, std::string_view msg = "") {
+    if (err) {
+        std::string        err_detail;
+        raw_string_ostream os(err_detail);
+        os << err;
+        throw LLVMException(msg, err_detail);
+    }
+}
+
+template <typename T>
+constexpr T
+check_llvm_result(Expected<T> val_or_err, std::string_view msg = "") {
+    if (val_or_err) return std::move(*val_or_err);
+    else {
+        std::string        err_detail;
+        raw_string_ostream os(err_detail);
+        auto               err = val_or_err.takeError();
+        os << err;
+        throw LLVMException(msg, err_detail);
+    }
+}
+
+template <typename T>
+constexpr T&
+check_llvm_result(Expected<T&> val_or_err, std::string_view msg = "") {
+    if (val_or_err) return *val_or_err;
+    else {
+        std::string        err_detail;
+        raw_string_ostream os(err_detail);
+        auto               err = val_or_err.takeError();
+        os << err;
+        throw LLVMException(msg, err_detail);
+    }
+}
 
 } // namespace di

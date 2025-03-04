@@ -5,6 +5,14 @@ constexpr auto static_unique_ptr_cast(std::unique_ptr<From>&& F) {
     return std::unique_ptr<To>(static_cast<To*>(F.release()));
 }
 
+template <typename T>
+concept Enumerate = std::is_enum_v<T>;
+
+template <Enumerate T>
+constexpr auto underlying_value(T v) {
+    return static_cast<std::underlying_type_t<decltype(v)>>(v);
+}
+
 // From:
 // https://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
 

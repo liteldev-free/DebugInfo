@@ -20,4 +20,52 @@ private:
     object::OwningBinary<object::COFFObjectFile> m_owning_binary;
 };
 
+class UnexceptObjectException : public LLVMException {
+public:
+    template <typename T>
+    explicit UnexceptObjectException(const fs::path& path, TypeOnly<T>)
+    : LLVMException("Unexpected ObjectFile!") {
+        add_context("path", path.string());
+        add_context("excepted", typeid(T).name());
+    }
+
+    constexpr std::string category() const {
+        return "exception.llvm.invalidobject";
+    }
+};
+
+class MissingPDBInfoException : public LLVMException {
+public:
+    explicit MissingPDBInfoException()
+    : LLVMException("No PDB Info found in COFF file.") {}
+
+    constexpr std::string category() const {
+        return "exception.llvm.missingpdbinfo";
+    }
+};
+
+class UnsupportPDBFormatException : public LLVMException {
+public:
+    explicit UnsupportPDBFormatException(uint32_t signature)
+    : LLVMException("Unsupported PDB file format.") {
+        add_context_v_hex("signature", signature);
+    }
+
+    constexpr std::string category() const {
+        return "exception.llvm.missingpdbinfo";
+    }
+};
+
+class SectionNotFoundException : public LLVMException {
+public:
+    explicit SectionNotFoundException(size_t offset)
+    : LLVMException("The offset is not within any section.") {
+        add_context_v_hex("offset", offset);
+    }
+
+    constexpr std::string category() const {
+        return "exception.llvm.sectionnotfound";
+    }
+};
+
 } // namespace di::object_file

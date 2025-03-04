@@ -36,6 +36,15 @@ set_warnings('all')
 
 add_includedirs('src')
 
+-- workaround to fix std::stacktrace link problem
+-- for gcc == 14
+-- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
+-- for gcc == 13
+-- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
+if is_plat('linux') then
+    add_links('stdc++exp')
+end
+
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
 end

@@ -1,20 +1,17 @@
 #include "object_file/coff.h"
+#include "error.h"
 
 namespace di::object_file {
 
 COFF::COFF(const fs::path& path) {
     using namespace object;
 
-    auto obj_or_err = ObjectFile::createObjectFile(path.string());
-    if (!obj_or_err) {
-        throw std::runtime_error("Failed to create object file.");
-    }
+    auto file = check_llvm_result(ObjectFile::createObjectFile(path.string()));
 
-    if (!isa<COFFObjectFile>(obj_or_err->getBinary())) {
-        throw std::runtime_error("Is not a valid PE file.");
-    }
+    if (!isa<COFFObjectFile>(file.getBinary()))
+        throw UnexceptObjectException(path, TypeOnly<COFFObjectFile>{});
 
-    auto bin = obj_or_err->takeBinary();
+    auto bin = file.takeBinary();
 
     m_owning_binary = object::OwningBinary(
         static_unique_ptr_cast<COFFObjectFile>(std::move(bin.first)),
@@ -28,11 +25,13 @@ codeview::PDB70DebugInfo COFF::get_debug_info() const {
 
     if (get_owning_coff().getDebugPDBInfo(debug_info, pdb_file_name)
         || !debug_info) {
-        throw std::runtime_error("Failed to get pdb info from coff file.");
+        throw MissingPDBInfoException();
     }
 
-    if (debug_info->Signature.CVSignature != OMF::Signature::PDB70) {
-        throw std::runtime_error("Unsupported PDB format.");
+
+    if (auto signature = debug_info->Signature.CVSignature;
+        signature != OMF::Signature::PDB70) {
+        throw UnsupportPDBFormatException(signature);
     }
 
     return debug_info->PDB70;
@@ -50,7 +49,7 @@ size_t COFF::get_section_index(size_t offset) const {
         }
         current_index++;
     }
-    throw std::runtime_error("Offset is not in any section.");
+    throw SectionNotFoundException(offset);
 }
 
 object::coff_section* COFF::get_section_table() {

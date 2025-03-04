@@ -40,6 +40,10 @@ public:
         add_context("path", list_file_path.string());
         add_context("current_line", current_line);
     }
+
+    constexpr std::string category() const {
+        return "exception.dataformat.missingdecltype";
+    }
 };
 
 } // namespace di::data_format
