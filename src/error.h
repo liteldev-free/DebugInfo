@@ -47,11 +47,11 @@ public:
         if (!m_context_information.empty()) {
             context_information = "\n\nContext Information: \n";
             for (const auto& [key, value] : m_context_information) {
-                context_information += std::format("  {} = {}", key, value);
+                context_information += std::format("  {} = {}\n", key, value);
             }
         }
 
-        std::string stacktrace = "\n\nStackTrace: \n";
+        std::string stacktrace = "\nStackTrace: \n";
         int         stack_idx  = -1; // ignore first entry.
         for (const auto& entry : m_stacktrace) {
             stack_idx++;
@@ -61,7 +61,7 @@ public:
             if (func_name.empty()) func_name = "<unknown>";
             if (source_file.empty()) source_file = "<\?\?>";
             stacktrace += std::format(
-                "  #{} {} at {}:{}",
+                "  #{} {} at {}:{}\n",
                 stack_idx,
                 func_name,
                 source_file,
@@ -70,7 +70,7 @@ public:
         }
 
         return std::format(
-            "[{}] {}{}{}\n",
+            "[{}] {}{}{}",
             category(),
             m_reason,
             context_information,

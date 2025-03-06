@@ -57,9 +57,13 @@ int main(int argc, char* argv[]) try {
         );
     });
 
+    symbol_list.write(args.m_output_path);
 
     return 0;
 } catch (const BaseException& e) {
     std::cerr << e;
-    return -1;
+    return 1;
+} catch (const std::exception& e) {
+    std::cerr << e.what() << "\n";
+    return 1;
 }

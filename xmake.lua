@@ -47,6 +47,10 @@ end
 
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
+
+    -- to fix llvm link problem
+    -- see https://stackoverflow.com/questions/53805007/compilation-failing-on-enableabibreakingchecks
+    add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1')
 end
 
 --- targets

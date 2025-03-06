@@ -27,7 +27,7 @@ void TypedSymbolList::read(const fs::path& path) {
 void TypedSymbolList::write(const fs::path& path) const {
     std::ofstream ofs(path);
     for (const auto& [symbol, decl_type] : m_data) {
-        ofs << symbol << ", " << decl_type.string() << "\n";
+        ofs << decl_type.string() << ", " << symbol << "\n";
     }
 }
 

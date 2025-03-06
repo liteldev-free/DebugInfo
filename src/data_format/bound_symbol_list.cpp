@@ -13,7 +13,7 @@ void BoundSymbolList::read(const fs::path& path) {
     auto data = nlohmann::json::parse(ifs);
 
     m_entities.clear();
-    for (const auto& entity : data["data"]) {
+    for (const auto& entity : data) {
         m_entities.emplace(entity);
     }
 }

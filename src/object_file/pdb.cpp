@@ -26,6 +26,9 @@ void PDB::read(const fs::path& path) {
         loadDataForPDB(PDB_ReaderType::Native, path.string(), m_session)
     );
 
+    m_storaged_Ipi.reset(new codeview::MergingTypeTableBuilder(m_Alloc));
+    m_storaged_Tpi.reset(new codeview::MergingTypeTableBuilder(m_Alloc));
+
     auto& pdb_file = get_native_session().getPDBFile();
 
     SmallVector<codeview::TypeIndex, 128> type_map;
@@ -162,17 +165,15 @@ void PDB::build() {
                                         this](const BoundSymbol& entity) {
             BulkPublic symbol;
 
-            auto section_index =
-                m_owning_coff->get_section_index(entity.m_rva - m_image_base);
-            auto section = check_llvm_result(
+            auto section_index = m_owning_coff->get_section_index(entity.m_rva);
+            auto section       = check_llvm_result(
                 m_owning_coff->get_owning_coff().getSection(section_index + 1)
             );
 
             symbol.Name    = strdup(entity.m_symbol_name.c_str());
             symbol.NameLen = entity.m_symbol_name.size();
             symbol.Segment = section_index + 1;
-            symbol.Offset =
-                entity.m_rva - m_image_base - section->VirtualAddress;
+            symbol.Offset  = entity.m_rva - section->VirtualAddress;
             if (entity.m_is_function) symbol.setFlags(PublicSymFlags::Function);
 
             publics.emplace_back(symbol);

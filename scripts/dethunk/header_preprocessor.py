@@ -19,6 +19,9 @@ class ClassDefine:
         self.is_template = is_template
         self.is_empty = is_empty
 
+        # if is_empty:
+        #    print(rpath)
+
 
 def add_class_record(path: str, namespace: str, class_name: str, is_template: bool, is_empty: bool):
     assert len(path) > 0 and len(class_name) > 0

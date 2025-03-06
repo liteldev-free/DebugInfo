@@ -66,33 +66,43 @@ using namespace di::data_format;
 
 int main(int argc, char* argv[]) try {
 
-    auto args    = load_args(argc, argv);
-    auto symlist = TypedSymbolList();
+    auto args = load_args(argc, argv);
 
+    TypedSymbolList symlist;
     BoundSymbolList bound_symbol_list;
     RawText         failed_list;
+
+    for (const auto& input_path : args.m_input_paths) {
+        symlist.read(input_path);
+    }
+
+    std::println(
+        "{} symbols loaded from {} file(s).",
+        symlist.count(),
+        args.m_input_paths.size()
+    );
 
 #if !DI_USE_NATIVE_SYMBOL_RESOLVER
     MagicBlob magic_blob;
     magic_blob.read(args.m_magic_blob_path);
+
+    std::println("{} entries loaded from magicblob.", magic_blob.count());
 #endif
 
     symlist.for_each([&](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
-        auto rva = pl::symbol_provider::pl_resolve_symbol_silent_n(
+        auto address = pl::symbol_provider::pl_resolve_symbol_silent_n(
             sym.c_str(),
             sym.size()
         );
+        // TODO: imagebase...
 #else
-        auto rva = magic_blob.query(sym);
+        auto entry = magic_blob.query(sym);
 #endif
-        if (rva) {
-            bound_symbol_list.record(
-                symbol.m_name,
-                reinterpret_cast<uintptr_t>(rva),
-                symbol.m_type.is_function()
-            );
+        if (entry) {
+            bound_symbol_list
+                .record(symbol.m_name, entry->rva, symbol.m_type.is_function());
         } else {
             failed_list.record(symbol.m_name);
         }
@@ -107,5 +117,8 @@ int main(int argc, char* argv[]) try {
     return 0;
 } catch (const BaseException& e) {
     std::cerr << e;
+    return 1;
+} catch (const std::exception& e) {
+    std::cerr << e.what() << "\n";
     return 1;
 }
