@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) try {
 
     nlohmann::json data;
     blob.for_each([&data](hash_t hash, const MagicEntry& entry) {
-        data[hash] = entry;
+        data[std::format("{:#x}", hash)] = entry;
     });
 
     std::ofstream ofs(args.m_output_path);
