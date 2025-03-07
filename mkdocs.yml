@@ -1,0 +1,72 @@
+site_name: Bedrock DebugInfo
+site_url: https://bedrockdebug.info/
+repo_url: https://github.com/liteldev-free/DebugInfo
+edit_uri: edit/main/docs/
+repo_name: liteldev-free/DebugInfo
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+  language: en
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to system preference
+plugins:
+  - git-revision-date-localized:
+      enabled: true
+      enable_creation_date: true
+  - git-committers:
+      enabled: true
+      repository: liteldev-free/DebugInfo
+      branch: main
+extra:
+  alternate:
+    - name: English
+      link: /en/ 
+      lang: en
+    - name: 简体中文
+      link: /zh/
+      lang: zh
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/liteldev-free
+    - icon: fontawesome/brands/discord
+      link: https://discord.com/
+    - icon: fontawesome/brands/telegram
+      link: https://telegram.org
+markdown_extensions:
+  - admonition
+copyright: Copyright &copy; 2025 - present Open LiteLDev
