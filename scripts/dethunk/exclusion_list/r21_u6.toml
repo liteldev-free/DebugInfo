@@ -1,0 +1,61 @@
+# This is part of the failure of DeThunk's design, so it will be deprecated sooner or later.
+
+# Supported phrase:
+# equal, not_equal, contains, startswith, endswith
+
+[forward_decl_translator.ignored]
+contains = [
+    # see CommandRegistry.h, to resolve circular reference.
+    'CommandParameterData',
+]
+
+[trivial_dynamic_initializer_generator.ignored]
+equal = [
+    'Json::ValueIteratorBase',                                      # std::vector<T>::iterator
+    'Json::ValueConstIterator',
+    'Json::ValueIterator',
+    'MemoryStream',                                                 # std::istream
+    'Core::FileStream',                                             # ::std::iostream
+    'CommandRegistry::Overload',                                    # circular references
+    'CommandRegistry::Signature',
+    'Bedrock::UniqueOwnerPointer',                                  # bug?
+    'MovementDataExtractionUtility::StorageStorage::StorageTupleT', # shit template
+    'PlayerNotificationEvent',                                      # EventVariantImpl
+    'ClientInstanceNotificationEvent',
+    'ScriptingNotificationEvent',
+    'ServerNetworkGameplayNotificationEvent',
+    'ServerInstanceNotificationEvent',
+    'LevelNotificationEvent',
+    'BlockNotificationEvent',
+    'ItemNotificationEvent',
+    'ActorNotificationEvent',
+    'Details::ValueOrRef::Variant',
+]
+startswith = [
+    # bug?
+    'brstd::detail::function::',
+]
+
+[typeunwrapper.erased]
+contains = [
+    'WeakRef<',
+    '::entt::basic_registry<',
+    '::Bedrock::Application::ThreadOwner<',
+    '::OwnerPtr<::EntityContext>',
+]
+
+[typeunwrapper.dyninit_erased]
+equal = [
+    # # unique_ptr with user deleter
+    '::std::unique_ptr<::RakNet::RakPeerInterface, void (*)(::RakNet::RakPeerInterface*)>',
+    '::std::unique_ptr<uchar[0], ::mce::Blob::Deleter>',
+    '::SemVersion',
+    '::ServiceReference<::AppConfigs>',
+    '::ActorDataFlagComponent',
+    '::ActorDataBoundingBoxComponent',
+    '::glm::qua<float>',
+]
+contains = [
+    # todo
+    '::std::variant<',
+]

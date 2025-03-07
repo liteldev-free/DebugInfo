@@ -2,6 +2,8 @@
 Runtime Options
 """
 
+import tomllib
+
 
 class Options:
     base_dir = str()
@@ -38,6 +40,8 @@ class Options:
     # * see also https://reviews.llvm.org/D45978
     fix_msvc_c2734 = True
 
+    exclusion_list = {}
+
     def __init__(self, args):
         self.base_dir = args.path
         self.remove_constructor_thunk = args.remove_constructor_thunk
@@ -58,6 +62,9 @@ class Options:
 
         # others
         self.judge_other_options()
+
+        with open(args.exclusion_list, 'rb') as file:
+            self.exclusion_list = tomllib.load(file)
 
     def set_function(self, opt: bool):
         self.remove_constructor_thunk = opt
@@ -94,3 +101,40 @@ class Options:
 
         if not self.restore_static_variable:
             self.fix_msvc_c2734 = False
+
+    def _check_base(self, data, con: str):
+        if 'equal' in data:
+            for e in data['equal']:
+                if con == e:
+                    return True
+        if 'not_equal' in data:
+            for ne in data['not_equal']:
+                if con == ne:
+                    return False
+        if 'contains' in data:
+            for c in data['contains']:
+                if c in con:
+                    return True
+        if 'startswith' in data:
+            for s in data['startswith']:
+                if con.startswith(s):
+                    return True
+        if 'endswith' in data:
+            for e in data['endswith']:
+                if con.endswith(e):
+                    return True
+        return False
+
+    def should_ignore_forward_decl(self, decl):
+        return self._check_base(self.exclusion_list['forward_decl_translator']['ignored'], decl)
+
+    def should_ignore_generate_dynamic_initializer(self, type_name):
+        return self._check_base(
+            self.exclusion_list['trivial_dynamic_initializer_generator']['ignored'], type_name
+        )
+
+    def should_erase_type(self, type_name):
+        return self._check_base(self.exclusion_list['typeunwrapper']['erased'], type_name)
+
+    def should_erase_type_dyninit(self, type_name):
+        return self._check_base(self.exclusion_list['typeunwrapper']['dyninit_erased'], type_name)

@@ -133,18 +133,10 @@ def process(path_to_file: str, args: Options):
                             if empty_class in type_name or (
                                 args.erase_extra_invalid_types
                                 and (
-                                    'WeakRef<' in type_name  # TODO: remove it.
-                                    or '::entt::basic_registry<' in type_name
-                                    or '::Bedrock::Application::ThreadOwner<' in type_name
-                                    or '::OwnerPtr<::EntityContext>' in type_name
+                                    args.should_erase_type(type_name)
                                     or (
                                         args.add_trivial_dynamic_initializer
-                                        and '::std::variant<' in type_name  # TODO: ...
-                                    )
-                                    or (
-                                        args.add_trivial_dynamic_initializer
-                                        and type_name  # unique_ptr with user deleter, TODO: ...
-                                        == '::std::unique_ptr<::RakNet::RakPeerInterface, void (*)(::RakNet::RakPeerInterface*)>'
+                                        and args.should_erase_type_dyninit(type_name)
                                     )
                                 )
                             ):
@@ -288,8 +280,7 @@ def process(path_to_file: str, args: Options):
                 content += line
         if args.fix_includes_for_member_variables and has_typed_storage:
             for decl in forward_declarations:
-                if args.add_trivial_dynamic_initializer and 'CommandParameterData' in decl:
-                    # see CommandRegistry.h, to resolve circular reference.
+                if args.add_trivial_dynamic_initializer and args.should_ignore_forward_decl(decl):
                     continue
                 class_define = try_translate_forward_declaration(decl, member_variable_types)
                 if class_define:
@@ -311,19 +302,7 @@ def process(path_to_file: str, args: Options):
                         if ns:
                             full_name += '::'
                         full_name += cl
-                        if (
-                            full_name
-                            in [
-                                'Json::ValueIteratorBase',  # std::vector<T>::iterator
-                                'Json::ValueConstIterator',
-                                'Json::ValueIterator',
-                                'MemoryStream',  # std::istream
-                                'Core::FileStream',  # ::std::iostream
-                                'CommandRegistry::Overload',  # circular references
-                                'Bedrock::UniqueOwnerPointer',  # bug?
-                                'MovementDataExtractionUtility::StorageStorage::StorageTupleT',  # shit template
-                            ]
-                        ):
+                        if args.should_ignore_generate_dynamic_initializer(full_name):
                             continue
                         is_modified = True
                         content += f'\ninline {full_name} {var_name};'

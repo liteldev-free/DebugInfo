@@ -7,6 +7,7 @@ def main():
     parser = argparse.ArgumentParser('dethunk')
 
     parser.add_argument('path', help='Path to header project.')
+    parser.add_argument('--exclusion-list', help='Configure ignore rules.', required=True)
 
     parser.add_argument('--remove-constructor-thunk', action='store_true')
     parser.add_argument('--remove-destructor-thunk', action='store_true')
