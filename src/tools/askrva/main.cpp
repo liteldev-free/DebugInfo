@@ -24,8 +24,6 @@ using namespace di::data_format;
         std::optional<std::string> m_output_failed_path;
     } args;
 
-    std::string output_format;
-
     // clang-format off
 
     program.add_argument("path")
@@ -46,12 +44,6 @@ using namespace di::data_format;
     
     program.add_argument("--output-failed", "-of")
         .help("Path to output failed entries.");
-
-    program.add_argument("--output-format")
-        .help("Specify output format.")
-        .choices("auto", "text", "makepdb")
-        .default_value("auto")
-        .store_into(output_format);
 
     // clang-format on
 

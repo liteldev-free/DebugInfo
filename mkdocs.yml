@@ -3,13 +3,41 @@ site_url: https://bedrockdebug.info/
 repo_url: https://github.com/liteldev-free/DebugInfo
 edit_uri: edit/main/docs/
 repo_name: liteldev-free/DebugInfo
+nav:
+  - Home:
+      - index.md
+      - releases.md
+      - FAQ: faq.md
+      - License: license.md
+  - Toolchain:
+      - toolchain/index.md
+      - toolchain/DeThunk.md
+      - toolchain/DumpSYM.md
+      - toolchain/ExtractSYM.md
+      - toolchain/AskRVA.md
+      - toolchain/MakePDB.md
+      - toolchain/BlobExtractor.md
+  - Tutorial:
+      - Generate a PDB from scratch: tutorial/generate-a-pdb-from-scratch.md
+  - Research:
+      - research/index.md
+      - research/HeaderGen.md
+      - research/PreLoader.md
+      - research/FakeSymbol.md
+  - Community:
+      - community/index.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
+      - Contribution Guidelines: CONTRIBUTING.md
 theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.ico
   language: en
+  icon:
+    annotation: material/arrow-right-circle
   features:
     - navigation.instant
+    - navigation.indexes
     - navigation.instant.progress
     - navigation.tracking
     - navigation.tabs
@@ -17,7 +45,6 @@ theme:
     - navigation.path
     - navigation.top
     - navigation.footer
-    - toc.integrate
     - search.suggest
     - search.highlight
     - content.action.edit
@@ -43,6 +70,7 @@ theme:
         icon: material/lightbulb-outline
         name: Switch to system preference
 plugins:
+  - search
   - git-revision-date-localized:
       enabled: true
       enable_creation_date: true
@@ -53,20 +81,28 @@ plugins:
 extra:
   alternate:
     - name: English
-      link: /en/ 
+      link: /
       lang: en
-    - name: 简体中文
-      link: /zh/
-      lang: zh
   version:
     provider: mike
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/liteldev-free
     - icon: fontawesome/brands/discord
-      link: https://discord.com/
+      link: https://discord.gg/fPKVZScPT7
     - icon: fontawesome/brands/telegram
-      link: https://telegram.org
+      link: https://t.me/s/bdsplugins
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 copyright: Copyright &copy; 2025 - present Open LiteLDev

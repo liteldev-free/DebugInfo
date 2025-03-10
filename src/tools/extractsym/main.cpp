@@ -10,7 +10,7 @@ using namespace di::object_file;
 using namespace di::data_format;
 
 auto load_args(int argc, char* argv[]) {
-    argparse::ArgumentParser program("extractpdb");
+    argparse::ArgumentParser program("extractsym");
 
     struct {
         std::string m_program_database_path;
