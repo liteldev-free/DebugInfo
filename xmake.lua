@@ -64,8 +64,14 @@ target('libdi')
     set_basename('di')
 
     add_packages(
-        'nlohmann_json'
+        'xxhash',
+        'nlohmann_json',
+        'llvm'
     )
+
+    if is_plat('linux') then -- workaround to fix link problem.
+        add_links('LLVM')
+    end
 
 target('askrva')
     set_kind('binary')
@@ -111,14 +117,9 @@ target('extractsym')
     set_pcxxheader('src/pch.h')
 
     add_packages(
-        'llvm',
         'nlohmann_json',
         'argparse'
     )
-
-    if is_plat('linux') then -- workaround to fix link problem.
-        add_links('LLVM')
-    end
 
 target('makepdb')
     set_kind('binary')
@@ -127,11 +128,6 @@ target('makepdb')
     set_pcxxheader('src/pch.h')
 
     add_packages(
-        'llvm',
         'nlohmann_json',
         'argparse'
     )
-
-    if is_plat('linux') then
-        add_links('LLVM')
-    end
