@@ -20,6 +20,8 @@ jobs:
 
       - name: Setup XMake
         uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.9.8'
 
       - name: Restore build cache
         uses: actions/cache@v4
@@ -37,6 +39,7 @@ jobs:
           sudo ln -s /usr/include/llvm-19/llvm /usr/include/llvm
           sudo ln -s /usr/include/llvm-c-19/llvm-c /usr/include/llvm-c
           sudo ln -s /usr/lib/llvm-19/include/clang /usr/include/clang
+          ls /usr/include/clang
 
       - name: Configure
         run: |
