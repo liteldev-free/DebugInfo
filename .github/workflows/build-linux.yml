@@ -22,15 +22,19 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: '2.9.8'
+          actions-cache-folder: '.xmake-cache'
+          package-cache: true
+          package-cache-key: 'ubuntu-ci'
+          project-path: 'DebugInfo'
 
-      - name: Restore build cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.xmake
-          key: xmake-linux-${{ hashFiles('xmake.lua') }}
-          restore-keys: |
-            xmake-linux-
+#      - name: Restore build cache
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.xmake
+#          key: xmake-linux-${{ hashFiles('xmake.lua') }}
+#          restore-keys: |
+#            xmake-linux-
 
       - name: Install build dependencies
         run: |
@@ -45,6 +49,7 @@ jobs:
 
       - name: Configure
         run: |
+          # c++23 <print> requires gcc 14.
           xmake f -a x64 -m ${{ matrix.mode }} -p linux --toolchain=gcc-14 -v -y
 
       - name: Build
