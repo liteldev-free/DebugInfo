@@ -22,27 +22,27 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: '2.9.8'
-          actions-cache-folder: '.xmake-cache'
-          package-cache: true
-          package-cache-key: 'ubuntu-ci'
-          project-path: 'DebugInfo'
+          actions-cache-folder: '~/.xmake-dest'
 
-#      - name: Restore build cache
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            ~/.xmake
-#          key: xmake-linux-${{ hashFiles('xmake.lua') }}
-#          restore-keys: |
-#            xmake-linux-
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.xmake
+            ~/.xmake-dest
+          key: xmake-linux-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-linux-
 
       - name: Install build dependencies
         run: |
           sudo apt install -y build-essential llvm-19-dev libclang-19-dev
+
+          # workaround to switch llvm version.
+          sudo mv /usr/include/clang /usr/include/clang-compiler
           sudo ln -s /usr/lib/llvm-19/bin/llvm-config /usr/bin/llvm-config
           sudo ln -s /usr/include/llvm-19/llvm /usr/include/llvm
           sudo ln -s /usr/include/llvm-c-19/llvm-c /usr/include/llvm-c
-          sudo mv /usr/include/clang /usr/include/clang-compiler
           sudo ln -s /usr/lib/llvm-19/include/clang /usr/include/clang
           sudo ln -s /usr/lib/llvm-19/include/clang-c /usr/include/clang-c
           
