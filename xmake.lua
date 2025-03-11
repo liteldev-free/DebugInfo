@@ -63,6 +63,8 @@ target('libdi')
     remove_files('src/tools/**')
     set_basename('di')
 
+    add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+
     add_packages(
         'xxhash',
         'nlohmann_json',
