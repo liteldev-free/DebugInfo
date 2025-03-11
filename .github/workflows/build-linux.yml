@@ -38,8 +38,14 @@ jobs:
           sudo ln -s /usr/lib/llvm-19/bin/llvm-config /usr/bin/llvm-config
           sudo ln -s /usr/include/llvm-19/llvm /usr/include/llvm
           sudo ln -s /usr/include/llvm-c-19/llvm-c /usr/include/llvm-c
-          ls /usr/include/clang/19
-          mv /usr/include/clang /usr/include/clang.unk
+          echo X
+          ls /usr/include/clang/19/include
+          echo X
+          ls -l /usr/include/clang
+          echo X
+          ls -l /usr/include/clang/19
+          echo X
+          sudo mv /usr/include/clang /usr/include/clang.unk
           sudo ln -s /usr/lib/llvm-19/include/clang /usr/include/clang
           
 
