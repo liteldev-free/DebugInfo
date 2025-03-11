@@ -32,7 +32,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          sudo apt install -y build-essential llvm-19-dev
+          sudo apt install -y build-essential llvm-19-dev binutils-dev
 
       - name: Sync Repositories
         run: |
