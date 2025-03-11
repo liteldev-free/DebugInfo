@@ -53,8 +53,6 @@ if is_mode('debug') then
     add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1')
 end
 
-add_packages('llvm')
-
 --- targets
 
 target('libdi')
@@ -101,6 +99,10 @@ target('dumpsym')
     add_deps('libdi')
     add_files('src/tools/dumpsym/**.cpp')
     set_pcxxheader('src/pch.h')
+    
+    add_packages(
+        'llvm'
+    )
 
 target('extractsym')
     set_kind('binary')
@@ -109,6 +111,7 @@ target('extractsym')
     set_pcxxheader('src/pch.h')
 
     add_packages(
+        'llvm',
         'nlohmann_json',
         'argparse'
     )
@@ -124,6 +127,7 @@ target('makepdb')
     set_pcxxheader('src/pch.h')
 
     add_packages(
+        'llvm',
         'nlohmann_json',
         'argparse'
     )
