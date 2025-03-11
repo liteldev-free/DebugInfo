@@ -33,7 +33,8 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt install -y build-essential llvm-19-dev binutils-dev
-          llvm-config --version
+          ls /usr/lib/llvm-19/bin/
+          ls /usr/bin | grep llvm
 
       - name: Configure
         run: |
