@@ -34,6 +34,7 @@ jobs:
         run: |
           sudo apt install -y build-essential llvm-19-dev binutils-dev
           sudo ln -s /usr/lib/llvm-19/bin/llvm-config /usr/bin/llvm-config
+          sudo ln -s /usr/include/llvm-19 /usr/include/llvm
 
       - name: Configure
         run: |
