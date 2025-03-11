@@ -32,9 +32,8 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          gcc -v
-          gcc-14 -v
           sudo apt install -y build-essential llvm-19-dev binutils-dev
+          llvm-config --version
 
       - name: Configure
         run: |
