@@ -18,16 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare works
-        run: |
-          mkdir ~/.xmake-dest
+#      - name: Prepare works
+#        run: |
+#          mkdir ./.xmake-dest
 
       - name: Restore build cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.xmake
-            ~/.xmake-dest
+            ./.xmake-dest
           key: xmake-linux-${{ hashFiles('xmake.lua') }}
           restore-keys: |
             xmake-linux-
@@ -36,7 +36,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: '2.9.8'
-          actions-cache-folder: '~/.xmake-dest'
+          actions-cache-folder: './.xmake-dest'
 
       - name: Install build dependencies
         run: |
