@@ -69,10 +69,6 @@ target('libdi')
         'llvm'
     )
 
-    if is_plat('linux') then -- workaround to fix link problem.
-        add_links('LLVM')
-    end
-
 target('askrva')
     set_kind('binary')
     add_deps('libdi')
