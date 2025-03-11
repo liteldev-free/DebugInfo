@@ -63,8 +63,12 @@ target('libdi')
     remove_files('src/tools/**')
     set_basename('di')
 
+    add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+
     add_packages(
-        'nlohmann_json'
+        'xxhash',
+        'nlohmann_json',
+        'llvm'
     )
 
 target('askrva')
@@ -111,14 +115,9 @@ target('extractsym')
     set_pcxxheader('src/pch.h')
 
     add_packages(
-        'llvm',
         'nlohmann_json',
         'argparse'
     )
-
-    if is_plat('linux') then -- workaround to fix link problem.
-        add_links('LLVM')
-    end
 
 target('makepdb')
     set_kind('binary')
@@ -127,11 +126,6 @@ target('makepdb')
     set_pcxxheader('src/pch.h')
 
     add_packages(
-        'llvm',
         'nlohmann_json',
         'argparse'
     )
-
-    if is_plat('linux') then
-        add_links('LLVM')
-    end
