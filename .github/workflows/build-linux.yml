@@ -34,13 +34,9 @@ jobs:
         run: |
           sudo apt install -y build-essential llvm-19-dev binutils-dev
 
-      - name: Sync Repositories
-        run: |
-          xmake repo -u
-
       - name: Configure
         run: |
-          xmake f -a x64 -m ${{ matrix.mode }} -p linux -v -y
+          xmake f -a x64 -m ${{ matrix.mode }} -p linux --toolchain=gcc-14 -v -y
 
       - name: Build
         run: |
