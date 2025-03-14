@@ -21,9 +21,6 @@ nav:
       - Generate a PDB from scratch: tutorial/generate-a-pdb-from-scratch.md
   - Research:
       - research/index.md
-      - research/HeaderGen.md
-      - research/PreLoader.md
-      - research/FakeSymbol.md
   - Community:
       - community/index.md
       - Code of Conduct: CODE_OF_CONDUCT.md
@@ -83,8 +80,8 @@ extra:
     - name: English
       link: /
       lang: en
-  version:
-    provider: mike
+  #  version:
+  #    provider: mike
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/liteldev-free
