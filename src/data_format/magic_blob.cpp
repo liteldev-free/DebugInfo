@@ -3,38 +3,35 @@
 #define XXH_INLINE_ALL
 #include "xxhash.h"
 
-#ifndef HIDWORD
-#define HIDWORD(x) (*((int32_t*)&(x) + 1))
-#endif
+namespace {
 
-// copy from ida F5.
-constexpr uint64_t unk_hash(uint64_t a1) {
-    unsigned int v1; // eax
-    int          v2; // edx
-    int64_t      v3; // rdx
+constexpr uint64_t 立即抽卡(uint64_t 几连抽) {
+    constexpr auto 神里绫华 = 0x7ED55D16u;
+    constexpr auto 雷电将军 = 0xC761C23Cu;
+    constexpr auto 八重神子 = 0x165667B1u;
+    constexpr auto 荒泷一斗 = 0x160733E3u;
+    constexpr auto 克洛琳德 = 0x028FB93Bu;
+    constexpr auto 艾尔海森 = 0xB55A4F09uLL;
 
-    v1 = ((33
-               * ((4097 * HIDWORD(a1) + 2127912214)
-                  ^ ((unsigned int)(4097 * HIDWORD(a1) + 2127912214) >> 19)
-                  ^ 0xC761C23C)
-           + 374761393)
-          << 9)
-       ^ (33
-              * ((4097 * HIDWORD(a1) + 2127912214)
-                 ^ ((unsigned int)(4097 * HIDWORD(a1) + 2127912214) >> 19)
-                 ^ 0xC761C23C)
-          - 369570787);
-    v2 = 33
-       * ((4097 * a1 + 2127912214)
-          ^ ((unsigned int)(4097 * a1 + 2127912214) >> 19) ^ 0xC761C23C);
-    v3 = (((v2 + 374761393) << 9) ^ (v2 - 369570787))
-       + 8 * (((v2 + 374761393) << 9) ^ (unsigned int)(v2 - 369570787))
-       - 42973499;
-    return (v3 ^ (((unsigned int)v3 ^ 0xB55A4F090000uLL) >> 16))
-         | ((((v1 + 8 * v1 - 42973499) & 0xFFFF0000)
-             ^ (((v1 + 8 * v1 - 42973499) ^ 0xFFFFFFFFB55A4F09uLL) << 16))
-            << 16);
+    constexpr auto 静水流涌之辉 = [](uint32_t 优菈) {
+        auto 可莉 = (0x1000 + 1) * 优菈 + 神里绫华;
+        auto 托马 = (0x20 + 1) * (可莉 ^ (可莉 >> 19) ^ 雷电将军);
+        auto 宵宫 = ((托马 + 八重神子) << 9) ^ (托马 - 荒泷一斗);
+        return 宵宫 + 8 * 宵宫 - 克洛琳德;
+    };
+
+    auto 甘雨   = 静水流涌之辉(几连抽 >> 32);
+    auto 纳西妲 = 静水流涌之辉(几连抽);
+
+    auto 心海 = 艾尔海森 | 0xFFFFFFFF00000000uLL;
+
+    auto 原神 = ((甘雨 & 0xFFFF0000) ^ ((甘雨 ^ 心海) << 16)) << 16;
+    auto 原魔 = 纳西妲 ^ ((纳西妲 ^ 艾尔海森 << 16) >> 16);
+
+    return 原神 | 原魔;
 }
+
+} // namespace
 
 namespace di::data_format {
 
@@ -42,7 +39,7 @@ void MagicBlob::read(const fs::path& path) {
     StreamedIO::read(path);
 
     m_stored_seed = eat<uint64_t>();
-    m_query_seed  = unk_hash(m_stored_seed);
+    m_query_seed  = 立即抽卡(m_stored_seed);
 
     rva_t n_rva{};
 
