@@ -1,5 +1,4 @@
 #include "object_file/coff.h"
-#include "error.h"
 
 namespace di::object_file {
 

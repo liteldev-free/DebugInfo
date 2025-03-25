@@ -2,6 +2,8 @@
 
 #include <llvm/Object/COFF.h>
 
+#include "util/llvm_error.h"
+
 namespace di::object_file {
 
 class COFF {

@@ -16,6 +16,8 @@
 #include <llvm/DebugInfo/PDB/PDB.h>
 #include <llvm/DebugInfo/PDB/PDBTypes.h>
 
+#include "util/llvm_error.h"
+
 using namespace llvm::pdb;
 using namespace llvm::codeview;
 
