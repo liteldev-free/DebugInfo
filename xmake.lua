@@ -56,6 +56,11 @@ if is_mode('debug') then
     add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1')
 end
 
+add_packages('boost')
+if is_plat('linux') or is_plat('macosx') then
+    add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
+end
+
 --- targets
 
 target('libdi')
@@ -69,14 +74,10 @@ target('libdi')
     if is_plat('linux') then
         add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
     end
-    if is_plat('linux') or is_plat('macosx') then
-        add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
-    end
 
     add_packages(
         'xxhash',
         'nlohmann_json',
-        'boost',
         'llvm'
     )
 
