@@ -67,6 +67,12 @@ if is_plat('linux') or is_plat('macosx') then
     add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
 end
 
+-- workaround to fix boost problem
+-- see https://github.com/boostorg/stacktrace/issues/88
+if is_plat('macosx') then
+    add_defines('_GNU_SOURCE')
+end
+
 --- targets
 
 target('libdi')
