@@ -3,6 +3,7 @@ add_rules('mode.debug', 'mode.release')
 add_requires('argparse      3.1')
 add_requires('nlohmann_json 3.11.3')
 add_requires('xxhash        0.8.3')
+add_requires('boost         1.87.0')
 
 add_requires('llvm')
 
@@ -36,14 +37,16 @@ set_warnings('all')
 
 add_includedirs('src')
 
--- workaround to fix std::stacktrace link problem
+-- now use boost::stacktrace, due to MacOSX (libc++) compatibility issues.
+-- ~~workaround to fix std::stacktrace link problem~~
+--
 -- for gcc == 14
 -- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
 -- for gcc == 13
 -- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
-if is_plat('linux') then
-    add_links('stdc++exp')
-end
+-- if is_plat('linux') then
+--     add_links('stdc++exp')
+-- end
 
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
@@ -63,11 +66,17 @@ target('libdi')
     remove_files('src/tools/**')
     set_basename('di')
 
-    add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+    if is_plat('linux') then
+        add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+    end
+    if is_plat('linux') or is_plat('macosx') then
+        add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
+    end
 
     add_packages(
         'xxhash',
         'nlohmann_json',
+        'boost',
         'llvm'
     )
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/stacktrace.hpp>
+
 namespace di {
 
 class BaseException {
@@ -24,7 +26,7 @@ public:
         Args&&... args
     )
     : m_reason(std::format(fmt, std::forward<Args>(args)...)),
-      m_stacktrace(std::stacktrace::current()) {}
+      m_stacktrace(boost::stacktrace::stacktrace()) {}
 
     constexpr std::string category() const {
         return static_cast<const Derived*>(this)->category();
@@ -54,7 +56,7 @@ public:
         for (const auto& entry : m_stacktrace) {
             stack_idx++;
             if (stack_idx == 0) continue;
-            auto func_name   = entry.description();
+            auto func_name   = entry.name();
             auto source_file = entry.source_file();
             if (func_name.empty()) func_name = "<unknown>";
             if (source_file.empty()) source_file = "<\?\?>";
@@ -92,7 +94,7 @@ private:
     std::string m_reason;
 
     std::unordered_map<std::string, std::string> m_context_information;
-    std::stacktrace                              m_stacktrace;
+    boost::stacktrace::stacktrace                m_stacktrace;
 };
 
 class UnixException : public RuntimeException<UnixException> {
