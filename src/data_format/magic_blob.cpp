@@ -3,35 +3,35 @@
 #define XXH_INLINE_ALL
 #include "xxhash.h"
 
-namespace {
+namespace _preloader_v_1_12_0 {
 
-constexpr uint64_t 立即抽卡(uint64_t 几连抽) {
-    constexpr auto 神里绫华 = 0x7ED55D16u;
-    constexpr auto 雷电将军 = 0xC761C23Cu;
-    constexpr auto 八重神子 = 0x165667B1u;
-    constexpr auto 荒泷一斗 = 0x160733E3u;
-    constexpr auto 克洛琳德 = 0x028FB93Bu;
-    constexpr auto 艾尔海森 = 0xB55A4F09uLL;
+constexpr uint64_t hash_qseed(uint64_t stored_seed) {
+    constexpr auto v1 = 0x7ED55D16u;
+    constexpr auto v2 = 0xC761C23Cu;
+    constexpr auto v3 = 0x165667B1u;
+    constexpr auto v4 = 0x160733E3u;
+    constexpr auto v5 = 0x028FB93Bu;
+    constexpr auto v6 = 0xB55A4F09uLL;
 
-    constexpr auto 静水流涌之辉 = [](uint32_t 优菈) {
-        auto 可莉 = (0x1000 + 1) * 优菈 + 神里绫华;
-        auto 托马 = (0x20 + 1) * (可莉 ^ (可莉 >> 19) ^ 雷电将军);
-        auto 宵宫 = ((托马 + 八重神子) << 9) ^ (托马 - 荒泷一斗);
-        return 宵宫 + 8 * 宵宫 - 克洛琳德;
+    constexpr auto al = [](uint32_t a) {
+        auto c1 = (0x1000 + 1) * a + v1;
+        auto d1 = (0x20 + 1) * (c1 ^ (c1 >> 19) ^ v2);
+        auto e1 = ((d1 + v3) << 9) ^ (d1 - v4);
+        return e1 + 8 * e1 - v5;
     };
 
-    auto 甘雨   = 静水流涌之辉(几连抽 >> 32);
-    auto 纳西妲 = 静水流涌之辉(几连抽);
+    auto a1 = al(stored_seed >> 32);
+    auto a2 = al(stored_seed);
 
-    auto 心海 = 艾尔海森 | 0xFFFFFFFF00000000uLL;
+    auto b1 = v6 | 0xFFFFFFFF00000000uLL;
 
-    auto 原神 = ((甘雨 & 0xFFFF0000) ^ ((甘雨 ^ 心海) << 16)) << 16;
-    auto 原魔 = 纳西妲 ^ ((纳西妲 ^ 艾尔海森 << 16) >> 16);
+    auto c1 = ((a1 & 0xFFFF0000) ^ ((a1 ^ b1) << 16)) << 16;
+    auto c2 = a2 ^ ((a2 ^ v6 << 16) >> 16);
 
-    return 原神 | 原魔;
+    return c1 | c2;
 }
 
-} // namespace
+} // namespace _preloader_v_1_12_0
 
 namespace di::data_format {
 
@@ -39,7 +39,7 @@ void MagicBlob::read(const fs::path& path) {
     StreamedIO::read(path);
 
     m_stored_seed = eat<uint64_t>();
-    m_query_seed  = 立即抽卡(m_stored_seed);
+    m_query_seed  = _preloader_v_1_12_0::hash_qseed(m_stored_seed);
 
     rva_t n_rva{};
 
