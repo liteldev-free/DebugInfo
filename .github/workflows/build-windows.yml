@@ -1,0 +1,53 @@
+name: Build (Windows)
+
+on:
+  push:
+    paths:
+      - .github/workflows/build-windows.yml
+      - src/**
+      - xmake.lua
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        mode: [release, debug]
+        arch: [x64]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup XMake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.9.8'
+
+      - name: Restore XMake Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+          key: xmake-windows-${{ matrix.arch }}-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-windows-${{ matrix.arch }}-
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Configure
+        run: |
+          xmake f -a ${{ matrix.arch }} -m ${{ matrix.mode }} -p windows -v -y
+
+#      - name: Build
+#        run: |
+#          xmake -v -y
+
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: debuginfo-windows-${{ matrix.arch }}-${{ matrix.mode }}
+#          path: |
+#            build/windows/${{ matrix.arch }}/${{ matrix
+.mode }}
