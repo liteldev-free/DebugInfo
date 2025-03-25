@@ -49,5 +49,4 @@ jobs:
 #        with:
 #          name: debuginfo-windows-${{ matrix.arch }}-${{ matrix.mode }}
 #          path: |
-#            build/windows/${{ matrix.arch }}/${{ matrix
-.mode }}
+#            build/windows/${{ matrix.arch }}/${{ matrix.mode }}
