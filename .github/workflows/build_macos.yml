@@ -37,11 +37,11 @@ jobs:
 
       - name: Configure
         run: |
-          xmake f -a ${{ matrix.arch }} -m ${{ matrix.mode }} -p macosx -v -y
+          xmake f -a ${{ matrix.arch }} -m ${{ matrix.mode }} -p macosx -vD -y
 
       - name: Build
         run: |
-          xmake -v -y
+          xmake -vD -y
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

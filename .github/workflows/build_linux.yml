@@ -37,11 +37,11 @@ jobs:
       - name: Configure
         run: |
           # c++23 <print> requires gcc 14.
-          xmake f -a x64 -m ${{ matrix.mode }} -p linux --toolchain=gcc-14 -v -y
+          xmake f -a x64 -m ${{ matrix.mode }} -p linux --toolchain=gcc-14 -vD -y
 
       - name: Build
         run: |
-          xmake -vD
+          xmake -vD -y
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
