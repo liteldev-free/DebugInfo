@@ -40,36 +40,8 @@ end
 set_languages('c23', 'c++23')
 set_warnings('all')
 
-add_includedirs('src')
-
--- now use boost::stacktrace, due to MacOSX (libc++) compatibility issues.
--- ~~workaround to fix std::stacktrace link problem~~
---
--- for gcc == 14
--- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
--- for gcc == 13
--- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
--- if is_plat('linux') then
---     add_links('stdc++exp')
--- end
-
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
-
-    -- to fix llvm link problem
-    -- see https://stackoverflow.com/questions/53805007/compilation-failing-on-enableabibreakingchecks
-    add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1')
-end
-
-add_packages('boost')
-if is_plat('linux') or is_plat('macosx') then
-    add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
-end
-
--- workaround to fix boost problem
--- see https://github.com/boostorg/stacktrace/issues/88
-if is_plat('macosx') then
-    add_defines('_GNU_SOURCE')
 end
 
 --- targets
@@ -86,22 +58,48 @@ target('libdi')
         add_cxflags('-fPIC')
     end
 
+    add_packages('xxhash')
     add_packages(
-        'xxhash',
+        'libllvm',
+        'boost',
         'nlohmann_json',
-        'libllvm'
+        {public = true}
     )
+
+    add_includedirs('src', {public = true})
+
+    -- now use boost::stacktrace, due to MacOSX (libc++) compatibility issues.
+    -- ~~workaround to fix std::stacktrace link problem~~
+    --
+    -- for gcc == 14
+    -- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
+    -- for gcc == 13
+    -- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
+    -- if is_plat('linux') then
+    --     add_links('stdc++exp')
+    -- end
+
+    if is_plat('linux') or is_plat('macosx') then
+        add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1', {public = true})
+    end
+
+    -- workaround to fix boost problem
+    -- see https://github.com/boostorg/stacktrace/issues/88
+    if is_plat('macosx') then
+        add_defines('_GNU_SOURCE', {public = true})
+    end
+
+    -- to fix llvm link problem
+    -- see https://stackoverflow.com/questions/53805007/compilation-failing-on-enableabibreakingchecks
+    add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1', {public = true})
 
 target('askrva')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/askrva/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'argparse',
-        'nlohmann_json'
-    )
+    add_deps('libdi')
+    add_packages('argparse')
 
     if is_config('symbol-resolver', 'native') then
         add_packages('preloader')
@@ -110,43 +108,33 @@ target('askrva')
 
 target('blob-extractor')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/blob-extractor/**.cpp')
     set_pcxxheader('src/pch.h')
 
+    add_deps('libdi')
     add_packages(
-        'nlohmann_json',
-        'argparse'
+        'argparse',
+        'nlohmann_json'
     )
 
 target('dumpsym')
     set_kind('shared')
-    add_deps('libdi')
     add_files('src/tools/dumpsym/**.cpp')
     set_pcxxheader('src/pch.h')
-    
-    add_packages(
-        'libllvm'
-    )
+    add_deps('libdi')
 
 target('extractsym')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/extractsym/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'nlohmann_json',
-        'argparse'
-    )
+    add_deps('libdi')
+    add_packages('argparse')
 
 target('makepdb')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/makepdb/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'nlohmann_json',
-        'argparse'
-    )
+    add_deps('libdi')
+    add_packages('argparse')

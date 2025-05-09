@@ -1,7 +1,5 @@
 #include <argparse/argparse.hpp>
 
-#include <llvm/DebugInfo/CodeView/SymbolRecord.h>
-
 #include "data_format/typed_symbol_list.h"
 #include "object_file/pdb.h"
 
