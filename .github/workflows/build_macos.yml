@@ -24,7 +24,7 @@ jobs:
         with:
           path: |
             ~/.xmake
-            ~/.xmake-dest
+            ./.xmake-dest
           key: xmake-macos-${{ hashFiles('xmake.lua') }}
           restore-keys: |
             xmake-macos-
@@ -33,7 +33,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: "2.9.9"
-          actions-cache-folder: "~/.xmake-dest"
+          actions-cache-folder: "./.xmake-dest"
 
       - name: Configure
         run: |
