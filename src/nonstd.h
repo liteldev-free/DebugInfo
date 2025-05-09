@@ -19,6 +19,12 @@ constexpr auto underlying_value(T v) {
 #define DI_CONSTEXPR inline
 #endif
 
+// a clang bug
+#if __clang_major__ < 19
+#undef DI_CONSTEXPR
+#define DI_CONSTEXPR inline
+#endif
+
 // From:
 // https://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
 
