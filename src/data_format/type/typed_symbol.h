@@ -5,6 +5,12 @@
 namespace di {
 
 struct TypedSymbol {
+#if __cpp_aggregate_paren_init < 201902L
+    TypedSymbol(std::string_view name, DeclType type)
+    : m_name(name),
+      m_type(type) {}
+#endif
+
     std::string m_name;
     DeclType    m_type;
 
