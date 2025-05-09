@@ -20,7 +20,7 @@ public:
     constexpr std::string category() const { return "exception.llvm"; }
 };
 
-DI_INLINE void check_llvm_result(Error err, std::string_view msg = "") {
+DI_CONSTEXPR void check_llvm_result(Error err, std::string_view msg = "") {
     if (err) {
         std::string        err_detail;
         raw_string_ostream os(err_detail);
@@ -30,7 +30,7 @@ DI_INLINE void check_llvm_result(Error err, std::string_view msg = "") {
 }
 
 template <typename T>
-DI_INLINE T
+DI_CONSTEXPR T
 check_llvm_result(Expected<T> val_or_err, std::string_view msg = "") {
     if (val_or_err) return std::move(*val_or_err);
     else {
@@ -43,7 +43,7 @@ check_llvm_result(Expected<T> val_or_err, std::string_view msg = "") {
 }
 
 template <typename T>
-DI_INLINE T&
+DI_CONSTEXPR T&
 check_llvm_result(Expected<T&> val_or_err, std::string_view msg = "") {
     if (val_or_err) return *val_or_err;
     else {

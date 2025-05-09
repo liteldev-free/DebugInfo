@@ -14,7 +14,7 @@ public:
 
     void record(const std::string& symbol, rva_t rva, bool is_function);
 
-    DI_INLINE void for_each(const for_each_callback_t& callback) const {
+    DI_CONSTEXPR void for_each(const for_each_callback_t& callback) const {
         for (const auto& entity : m_entities) callback(entity);
     }
 

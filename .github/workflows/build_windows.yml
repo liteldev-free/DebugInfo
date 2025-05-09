@@ -35,9 +35,6 @@ jobs:
           restore-keys: |
             xmake-windows-${{ matrix.arch }}-
 
-      - name: Setup msvc
-        uses: microsoft/setup-msbuild@v2
-
       - name: Configure
         run: |
           xmake f -a ${{ matrix.arch }} -m ${{ matrix.mode }} -p windows -vD -y --toolchain=clang

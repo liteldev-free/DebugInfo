@@ -11,7 +11,7 @@ public:
 
     void read(const fs::path& path) override;
 
-    DI_INLINE void for_each(const for_each_callback_t& callback) const {
+    DI_CONSTEXPR void for_each(const for_each_callback_t& callback) const {
         for (const auto& [hash, entry] : m_entries) callback(hash, *entry);
     }
 

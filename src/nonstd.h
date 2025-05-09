@@ -14,9 +14,9 @@ constexpr auto underlying_value(T v) {
 }
 
 #if __cpp_constexpr >= 202211L // complete c++23 constexpr
-#define DI_INLINE constexpr
+#define DI_CONSTEXPR constexpr
 #else
-#define DI_INLINE inline
+#define DI_CONSTEXPR inline
 #endif
 
 // From:
