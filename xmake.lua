@@ -1,8 +1,11 @@
 add_rules('mode.debug', 'mode.release')
 
+add_repositories('rbw-testing https://github.com/Redbeanw44602/xmake-repo-testing')
+
 add_requires('argparse      3.1')
 add_requires('nlohmann_json 3.11.3')
 add_requires('xxhash        0.8.3')
+add_requires('libllvm       19.1.7')
 add_requires('boost         1.87.0', {
     system = false, 
     configs = {
@@ -10,8 +13,6 @@ add_requires('boost         1.87.0', {
         stacktrace = true
     }
 })
-
-add_requires('llvm')
 
 --- options
 
@@ -35,8 +36,6 @@ if is_config('symbol-resolver', 'native') then
 end
 
 --- global settings
-
-set_policy("build.optimization.lto", true)
 
 set_languages('c23', 'c++23')
 set_warnings('all')
@@ -84,13 +83,13 @@ target('libdi')
     set_basename('di')
 
     if is_plat('linux') then
-        add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+        add_cxflags('-fPIC')
     end
 
     add_packages(
         'xxhash',
         'nlohmann_json',
-        'llvm'
+        'libllvm'
     )
 
 target('askrva')
@@ -127,7 +126,7 @@ target('dumpsym')
     set_pcxxheader('src/pch.h')
     
     add_packages(
-        'llvm'
+        'libllvm'
     )
 
 target('extractsym')
