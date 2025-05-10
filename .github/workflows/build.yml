@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  push:
+    paths:
+      - .github/workflows/build.yml
+      - src/**
+      - xmake.lua
+  workflow_dispatch:
+
+env:
+  XMAKE_VERSION: "2.9.9"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [debug, release]
+        plat:
+          - os: linux
+            toolchain: gcc-14 # c++23 <print> requires gcc 14.
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: linux
+            toolchain: gcc-14
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: macosx
+            toolchain: xcode
+            arch: arm64
+            runner: macos-latest
+          - os: windows
+            toolchain: clang
+            arch: x64
+            runner: windows-latest
+
+    runs-on: ${{ matrix.plat.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore xmake cache
+        if: matrix.plat.os != 'windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.xmake
+            ./.xmake-dest
+          key: xmake-${{ matrix.plat.os }}-${{ matrix.plat.arch }}-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-${{ matrix.plat.os }}-${{ matrix.plat.arch }}-
+
+      - name: Restore xmake cache (Windows)
+        if: matrix.plat.os == 'windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+            ./.xmake-dest
+          key: xmake-${{ matrix.plat.os }}-${{ matrix.plat.arch }}-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-${{ matrix.plat.os }}-${{ matrix.plat.arch }}-
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: ${{ env.XMAKE_VERSION }}
+          actions-cache-folder: "./.xmake-dest"
+
+      - name: Configure
+        run: |
+          xmake f -a ${{ matrix.plat.arch }} -m ${{ matrix.mode }} -p ${{ matrix.plat.os }} --toolchain=${{ matrix.plat.toolchain }} -vD -y
+
+      - name: Build
+        run: |
+          xmake -vD -y
+
+      - name: Cleanup
+        run: |
+          xrepo clean
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debuginfo-${{ matrix.mode }}-${{ matrix.plat.os }}-${{ matrix.plat.arch }}-${{ github.sha }}
+          path: |
+            build/${{ matrix.plat.os }}/${{ matrix.plat.arch }}/${{ matrix.mode }}
