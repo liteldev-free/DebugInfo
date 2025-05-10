@@ -1,8 +1,11 @@
 add_rules('mode.debug', 'mode.release')
 
+add_repositories('rbw-testing https://github.com/Redbeanw44602/xmake-repo-testing')
+
 add_requires('argparse      3.1')
 add_requires('nlohmann_json 3.11.3')
 add_requires('xxhash        0.8.3')
+add_requires('libllvm       19.1.7')
 add_requires('boost         1.87.0', {
     system = false, 
     configs = {
@@ -10,8 +13,6 @@ add_requires('boost         1.87.0', {
         stacktrace = true
     }
 })
-
-add_requires('llvm')
 
 --- options
 
@@ -36,35 +37,11 @@ end
 
 --- global settings
 
-set_policy("build.optimization.lto", true)
-
 set_languages('c23', 'c++23')
 set_warnings('all')
 
-add_includedirs('src')
-
--- now use boost::stacktrace, due to MacOSX (libc++) compatibility issues.
--- ~~workaround to fix std::stacktrace link problem~~
---
--- for gcc == 14
--- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
--- for gcc == 13
--- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
--- if is_plat('linux') then
---     add_links('stdc++exp')
--- end
-
 if is_mode('debug') then 
     add_defines('DI_DEBUG')
-
-    -- to fix llvm link problem
-    -- see https://stackoverflow.com/questions/53805007/compilation-failing-on-enableabibreakingchecks
-    add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1')
-end
-
-add_packages('boost')
-if is_plat('linux') or is_plat('macosx') then
-    add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1')
 end
 
 --- targets
@@ -78,25 +55,75 @@ target('libdi')
     set_basename('di')
 
     if is_plat('linux') then
-        add_ldflags('$(shell llvm-config --libs)') -- xrepo llvm bug?
+        add_cxflags('-fPIC')
     end
 
+    add_packages('xxhash')
     add_packages(
-        'xxhash',
+        'libllvm',
+        'boost',
         'nlohmann_json',
-        'llvm'
+        {public = true}
     )
+
+    add_includedirs('src', {public = true})
+
+    -- now use boost::stacktrace, due to MacOSX (libc++) compatibility issues.
+    -- ~~workaround to fix std::stacktrace link problem~~
+    --
+    -- for gcc == 14
+    -- see https://gcc.gnu.org/onlinedocs/gcc-14.2.0/libstdc++/manual/manual/using.html
+    -- for gcc == 13
+    -- see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/using.html
+    -- if is_plat('linux') then
+    --     add_links('stdc++exp')
+    -- end
+
+    if is_plat('linux') or is_plat('macosx') then
+        add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1', {public = true})
+    end
+
+    on_load(function (target) -- bug in libllvm package, TODO: remove it.
+        if target:is_plat('windows') then
+            local vcvars = target:toolchains()[1]:config("vcvars")
+            if not vcvars then
+                vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
+            end
+            local vs_install_dir = vcvars["BUILD_TOOLS_ROOT"] or vcvars["VSInstallDir"]
+            local vc_install_dir = vcvars["VCToolsInstallDir"]
+            local arch = target:arch()
+            local target_arch = {
+                x64 = "amd64",
+                arm = "arm",
+                arm64 = "arm64"
+            }
+            if target_arch[arch] == nil then
+                raise("DIA SDK does not currently support " .. arch)
+            end
+            local dia_sdkdir = path.join(vs_install_dir, "DIA SDK", "lib", target_arch[arch])
+            local atl_sdkdir = path.join(vc_install_dir, "atlmfc", "lib", arch)
+            target:add("linkdirs", dia_sdkdir, atl_sdkdir)
+            target:add("syslinks", "diaguids")
+        end
+    end)
+
+    -- workaround to fix boost problem
+    -- see https://github.com/boostorg/stacktrace/issues/88
+    if is_plat('macosx') then
+        add_defines('_GNU_SOURCE', {public = true})
+    end
+
+    -- to fix llvm link problem
+    -- see https://stackoverflow.com/questions/53805007/compilation-failing-on-enableabibreakingchecks
+    add_defines('LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1', {public = true})
 
 target('askrva')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/askrva/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'argparse',
-        'nlohmann_json'
-    )
+    add_deps('libdi')
+    add_packages('argparse')
 
     if is_config('symbol-resolver', 'native') then
         add_packages('preloader')
@@ -105,43 +132,33 @@ target('askrva')
 
 target('blob-extractor')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/blob-extractor/**.cpp')
     set_pcxxheader('src/pch.h')
 
+    add_deps('libdi')
     add_packages(
-        'nlohmann_json',
-        'argparse'
+        'argparse',
+        'nlohmann_json'
     )
 
 target('dumpsym')
     set_kind('shared')
-    add_deps('libdi')
     add_files('src/tools/dumpsym/**.cpp')
     set_pcxxheader('src/pch.h')
-    
-    add_packages(
-        'llvm'
-    )
+    add_deps('libdi')
 
 target('extractsym')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/extractsym/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'nlohmann_json',
-        'argparse'
-    )
+    add_deps('libdi')
+    add_packages('argparse')
 
 target('makepdb')
     set_kind('binary')
-    add_deps('libdi')
     add_files('src/tools/makepdb/**.cpp')
     set_pcxxheader('src/pch.h')
 
-    add_packages(
-        'nlohmann_json',
-        'argparse'
-    )
+    add_deps('libdi')
+    add_packages('argparse')

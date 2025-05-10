@@ -5,6 +5,10 @@
 namespace di {
 
 struct MagicEntry {
+#if __cpp_aggregate_paren_init < 201902L
+    MagicEntry(std::bitset<64> flags, rva_t rva) : flags(flags), rva(rva) {}
+#endif
+
     std::bitset<64> flags;
     // What is stored in the original format is not the RVA itself, but the
     // difference with the previous entry (in MagicBlob, RVA is sorted from

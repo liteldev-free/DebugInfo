@@ -20,7 +20,7 @@ public:
 
     constexpr size_t count() const { return m_data.size(); }
 
-    constexpr void for_each(const for_each_callback_t& callback) const {
+    DI_CONSTEXPR void for_each(const for_each_callback_t& callback) const {
         for (const auto& entity : m_data) callback(entity);
     }
 

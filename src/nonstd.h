@@ -13,6 +13,18 @@ constexpr auto underlying_value(T v) {
     return static_cast<std::underlying_type_t<decltype(v)>>(v);
 }
 
+#if __cpp_constexpr >= 202211L // complete c++23 constexpr
+#define DI_CONSTEXPR constexpr
+#else
+#define DI_CONSTEXPR inline
+#endif
+
+// a clang bug
+#if __clang_major__ < 19
+#undef DI_CONSTEXPR
+#define DI_CONSTEXPR inline
+#endif
+
 // From:
 // https://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
 

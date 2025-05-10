@@ -1,0 +1,55 @@
+name: Build (Linux)
+
+on:
+  push:
+    paths:
+      - .github/workflows/build_linux.yml
+      - src/**
+      - xmake.lua
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        mode: [debug, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore xmake cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.xmake
+            ./.xmake-dest
+          key: xmake-linux-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-linux-
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "2.9.9"
+          actions-cache-folder: "./.xmake-dest"
+
+      - name: Configure
+        run: |
+          # c++23 <print> requires gcc 14.
+          xmake f -a x64 -m ${{ matrix.mode }} -p linux --toolchain=gcc-14 -vD -y
+
+      - name: Build
+        run: |
+          xmake -vD -y
+
+      - name: Cleanup
+        run: |
+          xrepo clean
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debuginfo-${{ matrix.mode }}-linux-x64-${{ github.sha }}
+          path: |
+            build/linux/x64/${{ matrix.mode }}
