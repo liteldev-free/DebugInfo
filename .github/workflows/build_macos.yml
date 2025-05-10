@@ -39,9 +39,9 @@ jobs:
         run: |
           xmake f -a ${{ matrix.arch }} -m ${{ matrix.mode }} -p macosx -vD -y
 
-      #- name: Build
-      #  run: |
-      #    xmake -vD -y
+      - name: Build
+        run: |
+          xmake -vD -y
 
       - name: Cleanup
         run: |
