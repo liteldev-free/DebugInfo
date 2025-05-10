@@ -85,8 +85,11 @@ target('libdi')
 
     on_load(function (target) -- bug in libllvm package, TODO: remove it.
         if target:is_plat('windows') then
-            print(target:toolchains())
+            print('sdkdir', target:toolchains()[1]:sdkdir())
             local vcvars = target:toolchains()[1]:config("vcvars")
+            if not vcvars then
+                vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
+            end
             local arch = target:arch()
             local target_arch = {
                 x64 = "amd64",
