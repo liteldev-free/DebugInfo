@@ -83,7 +83,7 @@ target('libdi')
         add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1', {public = true})
     end
 
-    on_load(function (target) -- bug in libllvm package, TODO: remove it.
+    on_config(function (target) -- bug in libllvm package, TODO: remove it.
         if target:is_plat('windows') then
             local vcvars = target:toolchains()[1]:config("vcvars")
             local arch = target:arch()

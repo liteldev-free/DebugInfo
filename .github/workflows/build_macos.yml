@@ -43,6 +43,10 @@ jobs:
         run: |
           xmake -vD -y
 
+      - name: Cleanup
+        run: |
+          xrepo clean
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
