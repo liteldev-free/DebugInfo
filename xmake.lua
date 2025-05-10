@@ -83,9 +83,14 @@ target('libdi')
         add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1', {public = true})
     end
 
-    if is_plat('windows') then
-        add_links('diaguids', {public = true}) -- bug in libllvm package, TODO: remove it.
-    end
+    on_load(function (target) -- bug in libllvm package, TODO: remove it.
+        if target:is_plat('windows') then
+            vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
+            dia_sdkdir = path.join(vcvars["BUILD_TOOLS_ROOT"], "DIA SDK", "lib")
+            target:add("linkdirs", dia_sdkdir)
+            target:add("links", "diaguids")
+        end
+    end)
 
     -- workaround to fix boost problem
     -- see https://github.com/boostorg/stacktrace/issues/88
