@@ -89,7 +89,8 @@ target('libdi')
             if not vcvars then
                 vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
             end
-            print('vcvars', vcvars)
+            local vs_install_dir = vcvars["BUILD_TOOLS_ROOT"] or vcvars["VSInstallDir"]
+            local vc_install_dir = vcvars["VCToolsInstallDir"]
             local arch = target:arch()
             local target_arch = {
                 x64 = "amd64",
@@ -99,8 +100,8 @@ target('libdi')
             if target_arch[arch] == nil then
                 raise("DIA SDK does not currently support " .. arch)
             end
-            local dia_sdkdir = path.join(vcvars["BUILD_TOOLS_ROOT"], "DIA SDK", "lib", target_arch[arch])
-            local atl_sdkdir = path.join(vcvars["VCToolsInstallDir"], "atlmfc", "lib", arch)
+            local dia_sdkdir = path.join(vs_install_dir, "DIA SDK", "lib", target_arch[arch])
+            local atl_sdkdir = path.join(vc_install_dir, "atlmfc", "lib", arch)
             target:add("linkdirs", dia_sdkdir, atl_sdkdir)
             target:add("syslinks", "diaguids")
         end
