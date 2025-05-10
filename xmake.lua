@@ -85,10 +85,20 @@ target('libdi')
 
     on_load(function (target) -- bug in libllvm package, TODO: remove it.
         if target:is_plat('windows') then
-            vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
-            dia_sdkdir = path.join(vcvars["BUILD_TOOLS_ROOT"], "DIA SDK", "lib")
-            target:add("linkdirs", dia_sdkdir)
-            target:add("links", "diaguids")
+            local vcvars = target:toolchains()[1]:config("vcvars")
+            local arch = target:arch()
+            local target_arch = {
+                x64 = "amd64",
+                arm = "arm",
+                arm64 = "arm64"
+            }
+            if target_arch[arch] == nil then
+                raise("DIA SDK does not currently support " .. arch)
+            end
+            local dia_sdkdir = path.join(vcvars["BUILD_TOOLS_ROOT"], "DIA SDK", "lib", target_arch[arch])
+            local atl_sdkdir = path.join(vcvars["VCToolsInstallDir"], "atlmfc", "lib", arch)
+            target:add("linkdirs", dia_sdkdir, atl_sdkdir)
+            target:add("syslinks", "diaguids")
         end
     end)
 
