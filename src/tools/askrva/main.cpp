@@ -83,18 +83,24 @@ int main(int argc, char* argv[]) try {
 
     symlist.for_each([&](const TypedSymbol& symbol) {
         auto& sym = symbol.m_name;
+        rva_t rva{};
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
-        auto address = pl::symbol_provider::pl_resolve_symbol_silent_n(
-            sym.c_str(),
-            sym.size()
-        );
+        // FIXME: broken because IMAGE_BASE is not handled.
+        rva = static_cast<rva_t>(reinterpret_cast<uintptr_t>(
+            pl::symbol_provider::pl_resolve_symbol_silent_n(
+                sym.c_str(),
+                sym.size()
+            )
+        ));
         // TODO: imagebase...
 #else
-        auto entry = magic_blob.query(sym);
+        if (auto entry = magic_blob.query(sym)) {
+            rva = entry->rva;
+        }
 #endif
-        if (entry) {
+        if (rva) {
             bound_symbol_list
-                .record(symbol.m_name, entry->rva, symbol.m_type.is_function());
+                .record(symbol.m_name, rva, symbol.m_type.is_function());
         } else {
             failed_list.record(symbol.m_name);
         }
