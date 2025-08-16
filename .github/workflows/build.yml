@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  XMAKE_VERSION: "2.9.9"
+  XMAKE_VERSION: "3.0.1"
 
 jobs:
   build:
