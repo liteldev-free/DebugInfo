@@ -1,12 +1,10 @@
 add_rules('mode.debug', 'mode.release')
 
-add_repositories('rbw-testing https://github.com/Redbeanw44602/xmake-repo-testing')
-
-add_requires('argparse      3.1')
-add_requires('nlohmann_json 3.11.3')
+add_requires('argparse      3.2')
+add_requires('nlohmann_json 3.12.0')
 add_requires('xxhash        0.8.3')
 add_requires('libllvm       19.1.7')
-add_requires('boost         1.87.0', {
+add_requires('boost         1.88.0', {
     system = false, 
     configs = {
         filesystem = false, 
@@ -31,8 +29,8 @@ option('symbol-resolver')
 option_end()
 
 if is_config('symbol-resolver', 'native') then
-    add_repositories('liteldev-repo https://github.com/LiteLDev/xmake-repo.git')
-    add_requires('preloader 1.12.0')
+    add_repositories("liteldev-free-repo https://github.com/liteldev-free/xmake-repo.git")
+    add_requires('preloader 1.13.0')
 end
 
 --- global settings
@@ -82,30 +80,6 @@ target('libdi')
     if is_plat('linux') or is_plat('macosx') then
         add_defines('BOOST_STACKTRACE_USE_ADDR2LINE=1', {public = true})
     end
-
-    on_load(function (target) -- bug in libllvm package, TODO: remove it.
-        if target:is_plat('windows') then
-            local vcvars = target:toolchains()[1]:config("vcvars")
-            if not vcvars then
-                vcvars = import("core.tool.toolchain").load("msvc"):config("vcvars")
-            end
-            local vs_install_dir = vcvars["BUILD_TOOLS_ROOT"] or vcvars["VSInstallDir"]
-            local vc_install_dir = vcvars["VCToolsInstallDir"]
-            local arch = target:arch()
-            local target_arch = {
-                x64 = "amd64",
-                arm = "arm",
-                arm64 = "arm64"
-            }
-            if target_arch[arch] == nil then
-                raise("DIA SDK does not currently support " .. arch)
-            end
-            local dia_sdkdir = path.join(vs_install_dir, "DIA SDK", "lib", target_arch[arch])
-            local atl_sdkdir = path.join(vc_install_dir, "atlmfc", "lib", arch)
-            target:add("linkdirs", dia_sdkdir, atl_sdkdir)
-            target:add("syslinks", "diaguids")
-        end
-    end)
 
     -- workaround to fix boost problem
     -- see https://github.com/boostorg/stacktrace/issues/88
