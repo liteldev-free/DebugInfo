@@ -7,25 +7,29 @@ namespace di::data_format {
 
 class MagicBlob : public io::StreamedIO {
 public:
-    using for_each_callback_t = std::function<void(hash_t, MagicEntry const&)>;
+    enum FormatVersion {
+        V1_12_0,
+    };
 
-    void read(const fs::path& path) override;
+    using blob_t  = std::unique_ptr<MagicBlob>;
+    using entry_t = std::unique_ptr<MagicEntry>;
 
-    DI_CONSTEXPR void for_each(const for_each_callback_t& callback) const {
-        for (const auto& [hash, entry] : m_entries) callback(hash, *entry);
-    }
+    using shared_blob_t  = std::shared_ptr<const MagicBlob>;
+    using shared_entry_t = std::shared_ptr<const MagicEntry>;
 
-    constexpr size_t count() const { return m_entries.size(); }
+    using for_each_callback_t =
+        std::function<void(hash_t, shared_entry_t const&)>;
 
-    MagicEntry const* query(std::string_view symbol) const;
+    virtual void read(const fs::path& path) = 0;
 
-private:
-    std::unordered_map<hash_t, std::unique_ptr<MagicEntry>> m_entries;
+    virtual shared_entry_t query(std::string_view symbol) const        = 0;
+    virtual void   for_each(const for_each_callback_t& callback) const = 0;
+    virtual size_t count() const                                       = 0;
 
-    // MagicBlob uses a custom algorithm to transform the stored seed. When
-    // querying, you should use m_query_seed.
-    uint64_t m_stored_seed{};
-    uint64_t m_query_seed{};
+    static blob_t create(FormatVersion version);
+
+protected:
+    MagicBlob() = default;
 };
 
 } // namespace di::data_format

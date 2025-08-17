@@ -2,13 +2,14 @@
 #include "data_format/raw_text.h"
 #include "data_format/typed_symbol_list.h"
 
-#include <argparse/argparse.hpp>
-
 #if DI_USE_NATIVE_SYMBOL_RESOLVER
 #include <pl/SymbolProvider.h>
 #else
 #include "data_format/magic_blob.h"
 #endif
+
+#include <argparse/argparse.hpp>
+#include <magic_enum.hpp>
 
 using namespace di;
 using namespace di::data_format;
@@ -20,6 +21,7 @@ using namespace di::data_format;
         std::vector<std::string> m_input_paths;
         std::string              m_output_path;
         std::string              m_magic_blob_path;
+        std::string              m_format_version;
 
         std::optional<std::string> m_output_failed_path;
     } args;
@@ -36,6 +38,15 @@ using namespace di::data_format;
         .help("Path to magic blob (for builtin-symbol-resolver only).")
         .default_value("bedrock_runtime_data")
         .store_into(args.m_magic_blob_path);
+    
+    std::apply([&](auto&&... xs) {
+        program.add_argument("--preloader-version")
+            .help("Choose a compatible PreLoader version. (for builtin-symbol-resolver only).")
+            .choices(xs...)
+            .store_into(args.m_format_version)
+            .required();
+    }, magic_enum::enum_names<MagicBlob::FormatVersion>());
+
 
     program.add_argument("--output", "-o")
         .help("Path to output.")
@@ -75,10 +86,21 @@ int main(int argc, char* argv[]) try {
     );
 
 #if !DI_USE_NATIVE_SYMBOL_RESOLVER
-    MagicBlob magic_blob;
-    magic_blob.read(args.m_magic_blob_path);
+    auto format_version =
+        magic_enum::enum_cast<MagicBlob::FormatVersion>(args.m_format_version);
+    assert(format_version.has_value());
 
-    std::println("{} entries loaded from magicblob.", magic_blob.count());
+    auto magic_blob = MagicBlob::create(*format_version);
+    if (!magic_blob) {
+        std::println(
+            "Format version: {} is not yet implemented.",
+            args.m_format_version
+        );
+    }
+
+    magic_blob->read(args.m_magic_blob_path);
+
+    std::println("{} entries loaded from magicblob.", magic_blob->count());
 #endif
 
     symlist.for_each([&](const TypedSymbol& symbol) {
@@ -94,7 +116,7 @@ int main(int argc, char* argv[]) try {
         ));
         // TODO: imagebase...
 #else
-        if (auto entry = magic_blob.query(sym)) {
+        if (auto entry = magic_blob->query(sym)) {
             rva = entry->rva;
         }
 #endif

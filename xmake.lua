@@ -4,6 +4,7 @@ add_requires('argparse      3.2')
 add_requires('nlohmann_json 3.12.0')
 add_requires('xxhash        0.8.3')
 add_requires('libllvm       19.1.7')
+add_requires('magic_enum    0.9.7')
 add_requires('boost         1.88.0', {
     system = false, 
     configs = {
@@ -97,7 +98,10 @@ target('askrva')
     set_pcxxheader('src/pch.h')
 
     add_deps('libdi')
-    add_packages('argparse')
+    add_packages(
+        'argparse',
+        'magic_enum'
+    )
 
     if is_config('symbol-resolver', 'native') then
         add_packages('preloader')
@@ -112,7 +116,8 @@ target('blob-extractor')
     add_deps('libdi')
     add_packages(
         'argparse',
-        'nlohmann_json'
+        'nlohmann_json',
+        'magic_enum'
     )
 
 target('dumpsym')
