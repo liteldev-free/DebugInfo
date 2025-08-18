@@ -16,6 +16,8 @@ using namespace llvm;
 #include <functional>
 #include <memory>
 
+#include <bit>
+
 #include <cstring>
 #include <string>
 #include <string_view>

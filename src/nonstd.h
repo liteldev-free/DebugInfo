@@ -13,6 +13,9 @@ constexpr auto underlying_value(T v) {
     return static_cast<std::underlying_type_t<decltype(v)>>(v);
 }
 
+template <typename T>
+concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
+
 #if __cpp_constexpr >= 202211L // complete c++23 constexpr
 #define DI_CONSTEXPR constexpr
 #else

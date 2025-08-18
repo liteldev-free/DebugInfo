@@ -6,8 +6,7 @@ namespace di::data_format::_pl::v1_12_0 {
 
 class MagicBlobImpl : public MagicBlob {
 public:
-    using for_each_callback_t =
-        std::function<void(hash_t, shared_entry_t const&)>;
+    MagicBlobImpl() = default;
 
     void read(const fs::path& path) override;
 
