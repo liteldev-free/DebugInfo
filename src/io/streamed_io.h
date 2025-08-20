@@ -17,7 +17,7 @@ public:
     template <TriviallyCopyable T>
     constexpr T get() {
         if (m_position + sizeof(T) > m_buffer.size()) {
-            throw IOException("Read attempt is out of buffer bounds.");
+            throw OutOfBoundException(sizeof(T), m_buffer.size());
         }
         T value;
 
@@ -41,10 +41,16 @@ public:
 
         while (true) {
             if (m_position >= m_buffer.size()) {
-                throw IOException("Incomplete VarInt at end of buffer.");
+                throw CorruptedVarIntException(
+                    "Incomplete VarInt at end of buffer.",
+                    m_position
+                );
             }
             if (shift >= max_shift) {
-                throw IOException("VarInt is too long for the requested type.");
+                throw CorruptedVarIntException(
+                    "VarInt is too long for the requested type.",
+                    m_position
+                );
             }
 
             auto byte  = static_cast<std::byte>(m_buffer[m_position++]);
@@ -87,7 +93,7 @@ public:
 
     constexpr void seek(size_t pos) {
         if (pos > m_buffer.size()) {
-            throw IOException("Seek position is out of buffer bounds.");
+            throw OutOfBoundException(pos, m_buffer.size());
         }
         m_position = pos;
     }
@@ -98,7 +104,7 @@ public:
 
     constexpr size_t position() const { return m_position; }
 
-    std::string const& data() const { return m_buffer; }
+    std::string& underlying() { return m_buffer; }
 
 private:
     std::string m_buffer;
