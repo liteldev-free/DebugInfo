@@ -5,6 +5,7 @@ add_requires('nlohmann_json 3.12.0')
 add_requires('xxhash        0.8.3')
 add_requires('libllvm       19.1.7')
 add_requires('magic_enum    0.9.7')
+add_requires('openssl3      3.5.1')
 add_requires('boost         1.88.0', {
     system = false, 
     configs = {
@@ -62,6 +63,7 @@ target('libdi')
         'libllvm',
         'boost',
         'nlohmann_json',
+        'openssl3',
         {public = true}
     )
 
