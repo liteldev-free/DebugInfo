@@ -107,13 +107,12 @@ public:
     constexpr std::string category() const { return "exception.unix"; }
 };
 
-class ConvertEnumException : public RuntimeException<ConvertEnumException> {
+class EnumCastException : public RuntimeException<EnumCastException> {
 public:
-    // TODO: compile-time reflection.
     // TODO: remove helper.
 
     template <Enumerate T>
-    explicit ConvertEnumException(T enum_val)
+    explicit EnumCastException(T enum_val)
     : RuntimeException("Unable to convert string to enumeration value because "
                        "input value is bad.") {
         add_context("enum_type", typeid(T).name());
@@ -121,14 +120,14 @@ public:
     }
 
     template <typename T>
-    explicit ConvertEnumException(std::string_view enum_str, TypeOnly<T>)
+    explicit EnumCastException(std::string_view enum_str, TypeOnly<T>)
     : RuntimeException("Unable to convert enumeration value to string because "
                        "input value is bad.") {
         add_context("enum_type", typeid(T).name());
         add_context("string", enum_str);
     }
 
-    constexpr std::string category() const { return "exception.enumconvert"; }
+    constexpr std::string category() const { return "exception.magicenum"; }
 };
 
 } // namespace di

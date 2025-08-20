@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/string.h"
+#include <magic_enum.hpp>
 
 namespace di {
 
@@ -26,33 +26,11 @@ public:
 
     constexpr DeclType(Enum value) : m_data(value) {}
     constexpr explicit DeclType(std::string_view str) {
-        using namespace util::string;
-
-        // clang-format off
-            
-        switch (H(str)) {
-    #define HSTR(x)                                                                                                        \
-        case H(#x):                                                                                                        \
-            m_data = x;                                                                                                    \
-            break
-        HSTR(Function);
-        HSTR(CXXDeductionGuide);
-        HSTR(CXXMethod);
-        HSTR(CXXConstructor);
-        HSTR(CXXConversion);
-        HSTR(CXXDestructor);
-        HSTR(Var);
-        HSTR(Decomposition);
-        HSTR(ImplicitParam);
-        HSTR(OMPCapturedExpr);
-        HSTR(ParamVar);
-        HSTR(VarTemplateSpecialization);
-    #undef HSTR
-        default:
-            throw ConvertEnumException(str, TypeOnly<Enum>{});
+        if (auto value = magic_enum::enum_cast<Enum>(str)) {
+            m_data = *value;
+        } else {
+            throw EnumCastException(str, TypeOnly<Enum>{});
         }
-
-        // clang-format on
     }
 
     constexpr bool is_function() const {
@@ -87,7 +65,7 @@ public:
         HSTR(VarTemplateSpecialization);
     #undef HSTR
         default:
-            throw ConvertEnumException(m_data);
+            throw EnumCastException(m_data);
         }
 
         // clang-format on
