@@ -3,6 +3,8 @@
 // An xtea variant algorithm.
 // IDX = 11, L247 ~ L400
 
+namespace di::data_format::_pl::v1_13_0 {
+
 class XTeaLL {
 public:
     struct Block {
@@ -139,3 +141,5 @@ private:
         return transform_block_b<true>(v1, v2);
     }
 };
+
+} // namespace di::data_format::_pl::v1_13_0
