@@ -85,6 +85,21 @@ constexpr std::array<uint8_t, 32> DATAKEY_PART2_PRECURSOR_2 = {
     | **** AES Encrypted Data Part 2 **** |
     ---------------------------------------  EOF
 
+    AES Decrypted Data (Part 1)
+    ---------------------------------------  0x0
+    | (u64) UNK_DATA                      |
+    ---------------------------------------  0x8
+    | ........ (repeat N times) ........  |
+    ---------------------------------------  EOF
+
+    AES Decrypted Data (Part 2)
+    ---------------------------------------  0x0
+    | (u64) UNK_DATA                      |
+    | (u64) Flag                          |
+    ---------------------------------------  0xF
+    | ........ (repeat N times) ........  |
+    ---------------------------------------  EOF
+
 */
 
 namespace di::data_format::_pl::v1_13_0 {
