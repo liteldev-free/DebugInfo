@@ -5,6 +5,7 @@ add_requires('nlohmann_json 3.12.0')
 add_requires('xxhash        0.8.3')
 add_requires('libllvm       19.1.7')
 add_requires('magic_enum    0.9.7')
+add_requires('openssl3      3.5.1')
 add_requires('boost         1.88.0', {
     system = false, 
     configs = {
@@ -26,11 +27,21 @@ option('symbol-resolver')
         if option:value() == 'native' and not is_plat('windows') then 
             raise('the native symbol resolver does not support this platform.')
         end
+
+        -- TODO: remove it.
+        --   The native symbol resolver is completely unavailable,
+        --   v1.12.0 Problem: RVA not subtracted from ImageBase.
+        --   v1.13.0 Problem: pl_resolve_symbol does not return the real function address, and needs to handle thunk.
+        if option:value() == 'native' then
+            raise('sorry use builtin symbol resolver please.')
+        end
     end)
 option_end()
 
 if is_config('symbol-resolver', 'native') then
-    add_repositories("liteldev-free-repo https://github.com/liteldev-free/xmake-repo.git")
+    add_repositories('liteldev-free-repo https://github.com/liteldev-free/xmake-repo.git')
+
+    -- TODO: need to add an option to select the PreLoader version.
     add_requires('preloader 1.13.0')
 end
 
@@ -62,6 +73,8 @@ target('libdi')
         'libllvm',
         'boost',
         'nlohmann_json',
+        'openssl3',
+        'magic_enum',
         {public = true}
     )
 
@@ -98,10 +111,7 @@ target('askrva')
     set_pcxxheader('src/pch.h')
 
     add_deps('libdi')
-    add_packages(
-        'argparse',
-        'magic_enum'
-    )
+    add_packages('argparse')
 
     if is_config('symbol-resolver', 'native') then
         add_packages('preloader')
@@ -116,8 +126,7 @@ target('blob-extractor')
     add_deps('libdi')
     add_packages(
         'argparse',
-        'nlohmann_json',
-        'magic_enum'
+        'nlohmann_json'
     )
 
 target('dumpsym')

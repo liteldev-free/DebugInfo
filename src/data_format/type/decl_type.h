@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/string.h"
+#include <magic_enum.hpp>
 
 namespace di {
 
@@ -26,33 +26,11 @@ public:
 
     constexpr DeclType(Enum value) : m_data(value) {}
     constexpr explicit DeclType(std::string_view str) {
-        using namespace util::string;
-
-        // clang-format off
-            
-        switch (H(str)) {
-    #define HSTR(x)                                                                                                        \
-        case H(#x):                                                                                                        \
-            m_data = x;                                                                                                    \
-            break
-        HSTR(Function);
-        HSTR(CXXDeductionGuide);
-        HSTR(CXXMethod);
-        HSTR(CXXConstructor);
-        HSTR(CXXConversion);
-        HSTR(CXXDestructor);
-        HSTR(Var);
-        HSTR(Decomposition);
-        HSTR(ImplicitParam);
-        HSTR(OMPCapturedExpr);
-        HSTR(ParamVar);
-        HSTR(VarTemplateSpecialization);
-    #undef HSTR
-        default:
-            throw ConvertEnumException(str, TypeOnly<Enum>{});
+        if (auto value = magic_enum::enum_cast<Enum>(str)) {
+            m_data = *value;
+        } else {
+            throw EnumCastException(str, TypeOnly<Enum>{});
         }
-
-        // clang-format on
     }
 
     constexpr bool is_function() const {
@@ -65,32 +43,12 @@ public:
     constexpr Enum data() const { return m_data; }
 
     constexpr std::string string() const {
-        using namespace util::string;
-
-        // clang-format off
-
-        switch (m_data) {
-    #define HSTR(x)                                                                \
-        case x:                                                                    \
-            return #x;
-        HSTR(Function);
-        HSTR(CXXDeductionGuide);
-        HSTR(CXXMethod);
-        HSTR(CXXConstructor);
-        HSTR(CXXConversion);
-        HSTR(CXXDestructor);
-        HSTR(Var);
-        HSTR(Decomposition);
-        HSTR(ImplicitParam);
-        HSTR(OMPCapturedExpr);
-        HSTR(ParamVar);
-        HSTR(VarTemplateSpecialization);
-    #undef HSTR
-        default:
-            throw ConvertEnumException(m_data);
+        auto value = magic_enum::enum_name(m_data);
+        if (value.empty()) {
+            throw EnumCastException(m_data);
         }
 
-        // clang-format on
+        return std::string(value);
     }
 
     constexpr bool operator==(const DeclType& other) const {

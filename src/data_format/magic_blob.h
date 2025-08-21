@@ -9,6 +9,7 @@ class MagicBlob : public io::StreamedIO {
 public:
     enum FormatVersion {
         V1_12_0,
+        V1_13_0,
     };
 
     using blob_t  = std::unique_ptr<MagicBlob>;

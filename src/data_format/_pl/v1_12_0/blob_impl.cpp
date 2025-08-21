@@ -39,15 +39,15 @@ namespace di::data_format::_pl::v1_12_0 {
 void MagicBlobImpl::read(const fs::path& path) {
     StreamedIO::read(path);
 
-    m_stored_seed = eat<uint64_t>();
+    m_stored_seed = get<uint64_t>();
     m_query_seed  = hash_qseed(m_stored_seed);
 
     rva_t n_rva{};
 
-    while (next() != EOF) {
-        auto flags = eat_varint<uint64_t>();
-        auto rva   = eat_varint<rva_t>();
-        auto hash  = eat<hash_t>();
+    while (!is_eof()) {
+        auto flags = get_varint<uint64_t>();
+        auto rva   = get_varint<rva_t>();
+        auto hash  = get<hash_t>();
 
         // What is stored in the original format is not the RVA itself, but the
         // difference with the previous entry (in MagicBlob, RVA is sorted from
